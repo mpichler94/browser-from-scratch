@@ -49,5 +49,30 @@ class URL(url: String) {
             else -> throw IllegalArgumentException("unknown scheme '$scheme'")
         }
     }
+
+    fun withPath(path: String): URL = URL("$scheme://$host:$port$path")
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as URL
+
+        if (port != other.port) return false
+        if (scheme != other.scheme) return false
+        if (url != other.url) return false
+        if (host != other.host) return false
+        if (path != other.path) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = scheme.hashCode()
+        result = 31 * result + url.hashCode()
+        return result
+    }
+
+
 }
 

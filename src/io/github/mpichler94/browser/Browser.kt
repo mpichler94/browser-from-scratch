@@ -1,9 +1,12 @@
 package io.github.mpichler94.browser
 
 import java.io.File
+import java.time.Instant
 
 class Browser {
     val client = HttpClient()
+
+    val cache: LinkedHashMap<URL, CachedResponse> = LinkedHashMap(1000, 0.75f)
 
     fun load(url: String) {
         val showSource = url.startsWith("view-source:")
@@ -14,7 +17,24 @@ class Browser {
         } else if (parsedUrl.scheme == "file") {
             Response(body = File(parsedUrl.path).readText())
         } else {
-            client.request(parsedUrl.createRequest())
+            if (parsedUrl in cache && cache[parsedUrl]!!.validUntil > Instant.now()) {
+                cache[parsedUrl]!!.response
+            } else {
+                val response = client.request(parsedUrl.createRequest())
+                if (response.headers["cache-control"]?.contains("max-age") == true) {
+                    val maxAge = response.headers["cache-control"]!!.substringAfter("max-age=").toInt()
+                    cache[parsedUrl] = CachedResponse(
+                        Instant.now().plusSeconds(maxAge.toLong()),
+                        response
+                    )
+
+                    // TODO: more sophisticated cache eviction
+                    if (cache.size > 740) {
+                        cache.remove(cache.keys.first())
+                    }
+                }
+                response
+            }
         }
 
         if (showSource) {
@@ -58,3 +78,4 @@ class Browser {
     private val entities = mapOf("lt" to "<", "gt" to ">")
 }
 
+data class CachedResponse(val validUntil: Instant, val response: Response)

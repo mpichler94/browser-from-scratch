@@ -32,10 +32,8 @@ class BrowserTest {
                   </body>
                 </html>
             """.trimIndent()
-                )
+                ).withHeader("Cache-Control", "max-age=60")
             )
-
-
         }
     }
 
@@ -47,7 +45,9 @@ class BrowserTest {
     @Test
     fun `should load simple sample`() {
         val url = "http://localhost:8080/example1-simple.html"
-        Browser().load(url)
+        val browser = Browser()
+        browser.load(url)
+        browser.load(url)
     }
 
     @Test
@@ -67,5 +67,4 @@ class BrowserTest {
         val url = "view-source:file://testResources/example1-simple.html"
         Browser().load(url)
     }
-
 }

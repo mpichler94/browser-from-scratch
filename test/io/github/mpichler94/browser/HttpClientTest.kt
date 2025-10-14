@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockserver.integration.ClientAndServer
 import org.mockserver.junit.jupiter.MockServerExtension
 import org.mockserver.junit.jupiter.MockServerSettings
+import org.mockserver.model.ConnectionOptions
 import org.mockserver.model.HttpRequest.request
 import org.mockserver.model.HttpResponse.response
 import kotlin.test.Test
@@ -34,6 +35,24 @@ class HttpClientTest {
             """.trimIndent()
                 )
             )
+
+            client.`when`(
+                request()
+                    .withPath("/example9-chunked.html")
+                    .withMethod("GET")
+            ).respond(
+                response().withBody(
+                    """
+                <html>
+                  <body>
+                    <div>This is a simple</div>
+                    <div>web page with some</div>
+                    <span>text in it.</span>
+                  </body>
+                </html>
+            """.trimIndent()
+                ).withConnectionOptions(ConnectionOptions().withChunkSize(10))
+            )
         }
     }
 
@@ -43,7 +62,8 @@ class HttpClientTest {
     fun `requests a resource from a web server`() {
         val url = URL("http://www.example.com/index.html")
         val client = HttpClient()
-        val response = client.request(Request(url, "GET", mapOf("connection" to "keep-alive")))
+        val response =
+            client.request(Request(url, "GET", mapOf("connection" to "keep-alive", "accept-encoding" to "gzip")))
 
         assertThat(response.body)
             .startsWith("<!doctype html>")
@@ -59,5 +79,43 @@ class HttpClientTest {
         assertThat(client.request(Request(URL(url), "GET", mapOf("connection" to "keep-alive"))).body)
             .startsWith("<html>")
             .contains("This is a simple")
+    }
+
+    @Test
+    fun `should follow redirects`() {
+        val url = "http://browser.engineering/redirect"
+        val client = HttpClient()
+
+        assertThat(client.request(Request(URL(url), "GET", mapOf("connection" to "keep-alive"))).body)
+            .startsWith("<!DOCTYPE html>")
+            .contains("Downloading Web Pages")
+    }
+
+    @Test
+    fun `should follow redirects 2`() {
+        val url = "http://browser.engineering/redirect2"
+        val client = HttpClient()
+
+        assertThat(client.request(Request(URL(url), "GET", mapOf("connection" to "keep-alive"))).body)
+            .startsWith("<!DOCTYPE html>")
+            .contains("Downloading Web Pages")
+    }
+
+    @Test
+    fun `should follow redirects 3`() {
+        val url = "http://browser.engineering/redirect3"
+        val client = HttpClient()
+
+        assertThat(client.request(Request(URL(url), "GET", mapOf("connection" to "keep-alive"))).body)
+            .startsWith("<!DOCTYPE html>")
+            .contains("Downloading Web Pages")
+    }
+
+    @Test
+    fun `should load chunked response`() {
+        val url = "http://localhost:8080/example9-chunked.html"
+        val client = HttpClient()
+
+        assertThat(client.request(Request(URL(url), "GET", mapOf("connection" to "keep-alive"))).body)
     }
 }
