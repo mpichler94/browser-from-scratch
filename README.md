@@ -92,3 +92,27 @@ This project is open source under the MIT license. Please check the LICENSE.txt 
 ## Acknowledgments
 
 Inspired by [browser.engineering](https://browser.engineering) by Pavel Panchekha and James R. Wilcox.
+
+## Implemented Exercises
+
+- [x] 1-1: Http/1.1
+- [x] 1-2: File URLs
+- [x] 1-3: Data URLs
+- [x] 1-4: Entities
+- [x] 1-5: view-source
+- [x] 1-6: Keep-alive
+- [x] 1-7: Redirects
+- [x] 1-8: Caching
+- [x] 2-1: Line breaks
+- [x] 2-2: Mouse wheel
+- [x] 2-3: Resizing
+- [x] 2-4: Scrollbar
+- [ ] 2-5: Emoji
+- [x] 2-6: about:blank
+- [ ] 2-7: Alternate text direction
+- [x] 3-1: Centered text
+- [x] 3-2: Superscripts
+- [ ] 3-3: Soft hyphens
+- [x] 3-4: Small caps
+- [x] 3-5: Preformatted text
+

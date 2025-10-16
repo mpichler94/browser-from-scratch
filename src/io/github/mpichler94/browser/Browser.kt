@@ -6,6 +6,7 @@ import java.awt.KeyboardFocusManager
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
 import java.awt.event.KeyEvent
+import java.awt.font.FontRenderContext
 import java.io.File
 import java.time.Instant
 import javax.swing.JPanel
@@ -14,20 +15,15 @@ class Browser : JPanel() {
     private val client = HttpClient()
     private val cache: LinkedHashMap<URL, CachedResponse> = LinkedHashMap(1000, 0.75f)
 
-    private val hStep = 13
     private val vStep = 50
     private val scrollStep = 10
+    private val frc = FontRenderContext(null, true, true)
 
     private var url = "about:blank"
     private var scroll = 0
-    private var canvasHeight = 0
 
-    // 1 = scroll - height / canvasHeight
-    // 0 = scroll
-    private val scrollPosition: Int get() = (height * scroll) / canvasHeight
-
-    private var text = ""
-    private var displayList: List<DrawableWord> = listOf()
+    private var tokens = listOf<Token>()
+    private var l: Layout? = null
 
     init {
         layout = null
@@ -53,7 +49,7 @@ class Browser : JPanel() {
 
         addComponentListener(object : ComponentAdapter() {
             override fun componentResized(e: ComponentEvent) {
-                displayList = layout(text)
+                l = Layout(tokens, width)
                 repaint()
             }
         })
@@ -64,7 +60,7 @@ class Browser : JPanel() {
 
         graphics.font = Font("Sans", Font.PLAIN, 16)
 
-        displayList = layout(text)
+        l = Layout(tokens, width)
         repaint()
     }
 
@@ -87,8 +83,8 @@ class Browser : JPanel() {
         if (showSource) {
             showSource(response.body)
         } else {
-            text = lex(response.body)
-            displayList = layout(text)
+            tokens = lex(response.body)
+            l = Layout(tokens, width)
             repaint()
         }
     }
@@ -123,18 +119,23 @@ class Browser : JPanel() {
     }
 
     private fun draw(graphics: Graphics) {
-        for (c in displayList) {
+        for (c in l?.displayList ?: emptyList()) {
             if (c.y > scroll + height || c.y + vStep < scroll) {
                 continue
             }
-            graphics.drawString(c.word, c.x, c.y - scroll)
+            graphics.font = c.font
+            graphics.drawString(c.word, c.x, c.y - scroll + font.getLineMetrics(c.word, frc).ascent.toInt())
         }
 
-        graphics.fillRect(width - 10, scrollPosition, 10, 40)
+        val scrollPosition = height * scroll / (l?.height ?: 1)
+        val scrollBarHeight = height * height / (l?.height ?: 1)
+        if (scrollBarHeight <= height) {
+            graphics.fillRect(width - 10, scrollPosition, 10, scrollBarHeight)
+        }
     }
 
     private fun scrollDown() {
-        if (scroll >= canvasHeight - height) {
+        if (scroll >= (l?.height ?: 0) - height) {
             return
         }
 
@@ -151,27 +152,6 @@ class Browser : JPanel() {
         repaint()
     }
 
-    private fun layout(text: String): List<DrawableWord> {
-        val displayList = mutableListOf<DrawableWord>()
-
-        var cursorX = hStep
-        var cursorY = vStep
-        val metrics = graphics.fontMetrics
-        val space = metrics.charWidth(' ')
-        for (word in text.split(' ')) {
-            val w = metrics.stringWidth(word)
-            if (cursorX + w > width - hStep) {
-                cursorY += metrics.height
-                cursorX = hStep
-            }
-
-            displayList.add(DrawableWord(cursorX, cursorY, word))
-            cursorX += w + space
-        }
-
-        canvasHeight = cursorY + vStep
-        return displayList
-    }
 
     private fun URL.createRequest(headers: Map<String, String> = mapOf()): Request {
         val allHeaders =
@@ -179,27 +159,43 @@ class Browser : JPanel() {
         return Request(this, "GET", allHeaders)
     }
 
-    private fun lex(body: String): String {
+    private fun lex(body: String): List<Token> {
+        val out = mutableListOf<Token>()
         var inTag = false
         var inEntity = false
         var entity = ""
-        var text = ""
+        var buffer = ""
         for (c in body) {
             when (c) {
-                '<' -> inTag = true
-                '>' -> inTag = false
+                '<' -> {
+                    inTag = true
+                    if (buffer.isNotBlank()) {
+                        out.add(Text(buffer))
+                    }
+                    buffer = ""
+                }
+
+                '>' -> {
+                    inTag = false
+                    out.add(Tag(buffer))
+                    buffer = ""
+                }
+
                 '&' -> inEntity = true
                 ';' -> {
                     inEntity = false
-                    print(entities[entity] ?: "")
+                    buffer += entities[entity] ?: entity
                     entity = ""
                 }
 
                 else if (inEntity) -> entity += c
-                else if (!inTag) -> text += c
+                else -> buffer += c
             }
         }
-        return text
+        if (!inTag && buffer.isNotEmpty()) {
+            out.add(Text(buffer))
+        }
+        return out
     }
 
     private fun showSource(body: String) {
@@ -211,6 +207,8 @@ class Browser : JPanel() {
 
 private data class CachedResponse(val validUntil: Instant, val response: Response)
 
-private data class DrawableCharacter(val x: Int, val y: Int, val character: Char)
-private data class DrawableWord(val x: Int, val y: Int, val word: String)
+data class DrawableWord(val x: Int, val y: Int, val word: String, val font: Font)
 
+sealed interface Token
+data class Text(val text: String) : Token
+data class Tag(val tag: String) : Token
