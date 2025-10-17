@@ -17,7 +17,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: '17'
-          distribution: 'bellsoft'
+          distribution: 'liberica'
 
       - name: Run tests
         run: ./amper test
