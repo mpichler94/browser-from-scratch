@@ -21,9 +21,8 @@ jobs:
 
     - name: Install Amper
       run: |
-        curl -s https://get.sdkman.io | bash
-        source "$HOME/.sdkman/bin/sdkman-init.sh"
-        sdk install amper
+        curl -s https://download.jetbrains.com/toolbox/amper/install.sh | bash
+        export PATH="$HOME/.amper/bin:$PATH"
 
     - name: Build project
       run: ./amper build
