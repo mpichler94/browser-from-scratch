@@ -22,7 +22,7 @@ class Browser : JPanel() {
     private var url = "about:blank"
     private var scroll = 0
 
-    private var tokens = listOf<Token>()
+    private var nodes: Token? = null
     private var l: Layout? = null
 
     init {
@@ -49,8 +49,7 @@ class Browser : JPanel() {
 
         addComponentListener(object : ComponentAdapter() {
             override fun componentResized(e: ComponentEvent) {
-                l = Layout(tokens, width)
-                repaint()
+                reflow()
             }
         })
     }
@@ -60,8 +59,7 @@ class Browser : JPanel() {
 
         graphics.font = Font("Sans", Font.PLAIN, 16)
 
-        l = Layout(tokens, width)
-        repaint()
+        reflow()
     }
 
     override fun paintComponent(g: Graphics) {
@@ -83,9 +81,9 @@ class Browser : JPanel() {
         if (showSource) {
             showSource(response.body)
         } else {
-            tokens = lex(response.body)
-            l = Layout(tokens, width)
-            repaint()
+            nodes = HtmlParser(response.body).parse()
+            nodes?.printTree()
+            reflow()
         }
     }
 
@@ -116,6 +114,13 @@ class Browser : JPanel() {
                 response
             }
         }
+    }
+
+    private fun reflow() {
+        nodes?.run {
+            l = Layout(this, width)
+        }
+        repaint()
     }
 
     private fun draw(graphics: Graphics) {
@@ -159,56 +164,13 @@ class Browser : JPanel() {
         return Request(this, "GET", allHeaders)
     }
 
-    private fun lex(body: String): List<Token> {
-        val out = mutableListOf<Token>()
-        var inTag = false
-        var inEntity = false
-        var entity = ""
-        var buffer = ""
-        for (c in body) {
-            when (c) {
-                '<' -> {
-                    inTag = true
-                    if (buffer.isNotBlank()) {
-                        out.add(Text(buffer))
-                    }
-                    buffer = ""
-                }
-
-                '>' -> {
-                    inTag = false
-                    out.add(Tag(buffer))
-                    buffer = ""
-                }
-
-                '&' -> inEntity = true
-                ';' -> {
-                    inEntity = false
-                    buffer += entities[entity] ?: entity
-                    entity = ""
-                }
-
-                else if (inEntity) -> entity += c
-                else -> buffer += c
-            }
-        }
-        if (!inTag && buffer.isNotEmpty()) {
-            out.add(Text(buffer))
-        }
-        return out
-    }
 
     private fun showSource(body: String) {
         println(body)
     }
-
-    private val entities = mapOf("lt" to "<", "gt" to ">")
 }
 
 private data class CachedResponse(val validUntil: Instant, val response: Response)
 
 data class DrawableWord(val x: Int, val y: Int, val word: String, val font: Font)
 
-sealed interface Token
-data class Text(val text: String) : Token
-data class Tag(val tag: String) : Token

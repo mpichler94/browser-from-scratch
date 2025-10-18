@@ -115,4 +115,10 @@ Inspired by [browser.engineering](https://browser.engineering) by Pavel Panchekh
 - [ ] 3-3: Soft hyphens
 - [x] 3-4: Small caps
 - [x] 3-5: Preformatted text
+- [x] 4-1: Comments
+- [x] 4-2: Paragraphs
+- [x] 4-3: Scripts
+- [x] 4-4: Quoted attributes
+- [ ] 4-5: Syntax highlighting
+- [ ] 4-6: Mis-nested formatting tags
 

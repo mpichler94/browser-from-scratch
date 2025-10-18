@@ -3,6 +3,7 @@ package io.github.mpichler94.browser
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.io.InputStream
 import java.net.Socket
+import java.net.SocketException
 import java.util.zip.GZIPInputStream
 import javax.net.ssl.SSLSocketFactory
 
@@ -13,7 +14,12 @@ class HttpClient {
     fun request(request: Request): Response {
         require(request.url.scheme in listOf("http", "https"))
 
-        return doHttpRequest(request)
+        return try {
+            doHttpRequest(request)
+        } catch (e: SocketException) {
+            socketHandler.closeSocket()
+            doHttpRequest(request)
+        }
     }
 
     private fun doHttpRequest(request: Request, depth: Int = 0): Response {
@@ -136,6 +142,12 @@ private class SocketHandler {
         this.currentOrigin = "${request.url.host}:${request.url.port}"
         socket = createSocket(request)
         return socket!!
+    }
+
+    fun closeSocket() {
+        socket?.close()
+        socket = null
+        currentOrigin = null
     }
 
     private fun createSocket(request: Request): Socket = if (request.url.scheme == "https") {

@@ -3,7 +3,7 @@ package io.github.mpichler94.browser
 import java.awt.Font
 import java.awt.font.FontRenderContext
 
-class Layout(tokens: List<Token>, private val width: Int) {
+class Layout(tree: Token, private val width: Int) {
 
     private val hStep = 13
     private val vStep = 50
@@ -27,26 +27,28 @@ class Layout(tokens: List<Token>, private val width: Int) {
         private set
 
     init {
-        for (token in tokens) {
-            token(token)
-        }
+        recurse(tree)
         flush()
         height = cursorY + vStep
     }
 
-    private fun token(token: Token) {
-        if (token is Text) {
+    private fun recurse(tree: Token) {
+        if (tree is Text) {
             val font = getFont()
             val space = font.getStringBounds(" ", frc).width.toInt()
             if (pre) {
-                word(token.text, space, font)
+                word(tree.text, space, font)
                 return
             }
-            for (word in token.text.split(' ')) {
+            for (word in tree.text.split(' ')) {
                 word(if (abbr) word.uppercase() else word, space, font)
             }
-        } else if (token is Tag) {
-            tag(token)
+        } else if (tree is Element) {
+            openTag(tree)
+            for (child in tree.children) {
+                recurse(child)
+            }
+            closeTag(tree)
         }
     }
 
@@ -65,37 +67,40 @@ class Layout(tokens: List<Token>, private val width: Int) {
         cursorX += w + space
     }
 
-    private fun tag(tag: Tag) {
+    private fun openTag(tag: Element) {
         when (tag.tag) {
             "i" -> style = Font.ITALIC
-            "/i" -> style = Font.PLAIN
             "b" -> weight = Font.BOLD
-            "/b" -> weight = Font.PLAIN
             "small" -> size -= 2
-            "/small" -> size += 2
             "big" -> size += 2
-            "/big" -> size -= 2
             "br" -> flush()
-            "/p" -> {
+            "h1" -> center = true
+
+            "sup" -> sup = true
+            "abbr" -> abbr = true
+            "pre" -> pre = true
+        }
+    }
+
+    private fun closeTag(tag: Element) {
+        when (tag.tag) {
+            "i" -> style = Font.PLAIN
+            "b" -> weight = Font.PLAIN
+            "small" -> size += 2
+            "big" -> size -= 2
+            "p" -> {
                 flush()
                 cursorY += vStep
             }
 
-            "/h1" -> {
+            "h1" -> {
                 flush()
                 center = false
             }
 
-            "sup" -> sup = true
-            "/sup" -> sup = false
-            "abbr" -> abbr = true
-            "/abbr" -> abbr = false
-            "/pre" -> pre = false
-        }
-        if (tag.tag.startsWith("h1")) {
-            center = true
-        } else if (tag.tag.startsWith("pre")) {
-            pre = true
+            "sup" -> sup = false
+            "abbr" -> abbr = false
+            "pre" -> pre = false
         }
     }
 
