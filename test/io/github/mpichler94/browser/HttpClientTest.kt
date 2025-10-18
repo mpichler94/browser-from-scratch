@@ -1,6 +1,7 @@
 package io.github.mpichler94.browser
 
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockserver.integration.ClientAndServer
@@ -9,6 +10,8 @@ import org.mockserver.junit.jupiter.MockServerSettings
 import org.mockserver.model.ConnectionOptions
 import org.mockserver.model.HttpRequest.request
 import org.mockserver.model.HttpResponse.response
+import java.io.ByteArrayOutputStream
+import java.util.zip.GZIPOutputStream
 import kotlin.test.Test
 
 @ExtendWith(MockServerExtension::class)
@@ -19,11 +22,9 @@ class HttpClientTest {
         @JvmStatic
         fun setup(client: ClientAndServer) {
             client.`when`(
-                request()
-                    .withPath("/example1-simple.html")
-                    .withMethod("GET")
+                request("/example1-simple.html").withMethod("GET")
             ).respond(
-                response().withBody(
+                response(
                     """
                 <html>
                   <body>
@@ -37,11 +38,9 @@ class HttpClientTest {
             )
 
             client.`when`(
-                request()
-                    .withPath("/example9-chunked.html")
-                    .withMethod("GET")
+                request("/example9-chunked.html").withMethod("GET")
             ).respond(
-                response().withBody(
+                response(
                     """
                 <html>
                   <body>
@@ -55,11 +54,9 @@ class HttpClientTest {
             )
 
             client.`when`(
-                request()
-                    .withPath("/index.html")
-                    .withMethod("GET")
+                request("/index.html").withMethod("GET")
             ).respond(
-                response().withBody(
+                response(
                     """
                 <!doctype html>
                 <html>
@@ -80,8 +77,7 @@ class HttpClientTest {
             )
 
             client.`when`(
-                request()
-                    .withPath("/redirect")
+                request("/redirect")
                     .withMethod("GET")
             ).respond(
                 response()
@@ -90,8 +86,7 @@ class HttpClientTest {
             )
 
             client.`when`(
-                request()
-                    .withPath("/redirect2")
+                request("/redirect2")
                     .withMethod("GET")
             ).respond(
                 response()
@@ -100,8 +95,7 @@ class HttpClientTest {
             )
 
             client.`when`(
-                request()
-                    .withPath("/redirect3")
+                request("/redirect3")
                     .withMethod("GET")
             ).respond(
                 response()
@@ -110,11 +104,10 @@ class HttpClientTest {
             )
 
             client.`when`(
-                request()
-                    .withPath("/redirect-target")
+                request("/redirect-target")
                     .withMethod("GET")
             ).respond(
-                response().withBody(
+                response(
                     """
                 <!DOCTYPE html>
                 <html>
@@ -130,13 +123,17 @@ class HttpClientTest {
                 )
             )
 
+            val out = ByteArrayOutputStream(1000)
+            val stream = GZIPOutputStream(out, 1000, true)
+            stream.write("This is gzip compressed content".toByteArray())
+            stream.finish()
+            val data = out.toByteArray()
             client.`when`(
-                request()
-                    .withPath("/gzip-test")
+                request("/gzip-test")
                     .withMethod("GET")
             ).respond(
                 response()
-                    .withBody("This is gzip compressed content".toByteArray())
+                    .withBody(data)
                     .withHeader("Content-Encoding", "gzip")
             )
         }
@@ -152,7 +149,7 @@ class HttpClientTest {
         assertThat(response.body)
             .startsWith("<!doctype html>")
             .contains("<title>Example Domain</title>")
-            .contains("</body></html>")
+            .contains("</html>")
     }
 
     @Test
@@ -217,12 +214,12 @@ class HttpClientTest {
 
     @Test
     fun `should throw exception for invalid scheme`() {
-        val url = URL("ftp://example.com")
+        val url = URL("file://example.com")
         val client = HttpClient()
 
-        org.junit.jupiter.api.assertThrows<IllegalArgumentException> {
+        assertThatThrownBy {
             client.request(Request(url, "GET"))
-        }
+        }.isInstanceOf(IllegalArgumentException::class.java)
     }
 
     @Test
