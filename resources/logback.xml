@@ -6,6 +6,7 @@
     </appender>
 
     <logger name="io.github.mpichler94.browser.HttpClient" level="INFO"/>
+    <logger name="io.github.mpichler94.browser.Browser" level="INFO"/>
 
     <root level="DEBUG">
         <appender-ref ref="STDOUT"/>

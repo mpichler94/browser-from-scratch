@@ -121,15 +121,15 @@ class HtmlParser(val body: String) {
     }
 
     private fun getAttributes(text: String): Tag {
-        val parts = text.split(" ")
-        val tag = parts[0].lowercase()
+        val parts = text.split(' ', '\n', '\t', '\r')
+        val tag = parts[0].lowercase().trim()
         val attributes = mutableMapOf<String, String>()
         for (pair in parts.subList(1, parts.size)) {
             if (pair.contains('=')) {
                 val (key, value) = pair.split('=', limit = 2)
-                attributes[key.lowercase()] = value.trim('"', '\'')
+                attributes[key.lowercase().trim()] = value.trim().trim('"', '\'')
             } else {
-                attributes[pair.lowercase()] = ""
+                attributes[pair.lowercase().trim()] = ""
             }
         }
         return Tag(tag, attributes)
@@ -162,7 +162,7 @@ class HtmlParser(val body: String) {
                 openTags.lastOrNull() == "li" && tag == "li" -> {
                     addTag("/li")
                 }
-                
+
                 else -> {
                     break
                 }

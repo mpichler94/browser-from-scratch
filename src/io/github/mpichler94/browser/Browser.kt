@@ -1,5 +1,7 @@
 package io.github.mpichler94.browser
 
+import io.github.oshai.kotlinlogging.KotlinLogging
+import java.awt.Color
 import java.awt.Font
 import java.awt.Graphics
 import java.awt.KeyboardFocusManager
@@ -10,20 +12,22 @@ import java.awt.font.FontRenderContext
 import java.io.File
 import java.time.Instant
 import javax.swing.JPanel
+import kotlin.math.max
+import kotlin.math.min
 
 class Browser : JPanel() {
+    private val logger = KotlinLogging.logger {}
     private val client = HttpClient()
     private val cache: LinkedHashMap<URL, CachedResponse> = LinkedHashMap(1000, 0.75f)
 
-    private val vStep = 50
     private val scrollStep = 10
-    private val frc = FontRenderContext(null, true, true)
 
     private var url = "about:blank"
     private var scroll = 0
 
     private var nodes: Token? = null
-    private var l: Layout? = null
+    private var document: Layout? = null
+    private var displayList = emptyList<Drawable>()
 
     init {
         layout = null
@@ -49,6 +53,7 @@ class Browser : JPanel() {
 
         addComponentListener(object : ComponentAdapter() {
             override fun componentResized(e: ComponentEvent) {
+                scroll = max(0, min(scroll, (document?.height ?: 0) - height))
                 reflow()
             }
         })
@@ -82,7 +87,9 @@ class Browser : JPanel() {
             showSource(response.body)
         } else {
             nodes = HtmlParser(response.body).parse()
-            nodes?.printTree()
+            if (logger.isDebugEnabled()) {
+                nodes?.printTree()
+            }
             reflow()
         }
     }
@@ -118,29 +125,37 @@ class Browser : JPanel() {
 
     private fun reflow() {
         nodes?.run {
-            l = Layout(this, width)
+            document = DocumentLayout(this, width)
+            document!!.layout()
+            if (logger.isDebugEnabled()) {
+                document!!.printTree()
+            }
+            displayList = document!!.paintTree()
         }
         repaint()
     }
 
     private fun draw(graphics: Graphics) {
-        for (c in l?.displayList ?: emptyList()) {
-            if (c.y > scroll + height || c.y + vStep < scroll) {
+        for (cmd in displayList) {
+            if (cmd.top > scroll + height || cmd.bottom < scroll) {
                 continue
             }
-            graphics.font = c.font
-            graphics.drawString(c.word, c.x, c.y - scroll + font.getLineMetrics(c.word, frc).ascent.toInt())
+            cmd.execute(graphics, scroll)
         }
 
-        val scrollPosition = height * scroll / (l?.height ?: 1)
-        val scrollBarHeight = height * height / (l?.height ?: 1)
+        drawScrollBar(graphics)
+    }
+
+    private fun drawScrollBar(graphics: Graphics) {
+        val scrollPosition = height * scroll / (document?.height ?: 1)
+        val scrollBarHeight = height * height / (document?.height ?: 1)
         if (scrollBarHeight <= height) {
             graphics.fillRect(width - 10, scrollPosition, 10, scrollBarHeight)
         }
     }
 
     private fun scrollDown() {
-        if (scroll >= (l?.height ?: 0) - height) {
+        if (scroll >= (document?.height ?: 0) - height) {
             return
         }
 
@@ -172,5 +187,42 @@ class Browser : JPanel() {
 
 private data class CachedResponse(val validUntil: Instant, val response: Response)
 
-data class DrawableWord(val x: Int, val y: Int, val word: String, val font: Font)
+interface Drawable {
+    val top: Int
+    val left: Int
+    val bottom: Int
+    val right: Int
 
+    fun execute(graphics: Graphics, scroll: Int)
+}
+
+class DrawText(x1: Int, y1: Int, val text: String, val font: Font) : Drawable {
+    override val top = y1
+    override val left = x1
+    override val bottom = y1 + font.getLineMetrics(text, frc).height.toInt()
+    override val right = y1 + font.getStringBounds(text, frc).width.toInt()
+
+    companion object {
+        private val frc = FontRenderContext(null, true, true)
+    }
+
+    fun withPos(x1: Int, y1: Int) = DrawText(x1, y1, text, font)
+
+    override fun execute(graphics: Graphics, scroll: Int) {
+        graphics.color = Color.black
+        graphics.font = font
+        graphics.drawString(text, left, top - scroll + font.getLineMetrics(text, frc).ascent.toInt())
+    }
+}
+
+class DrawRect(x1: Int, y1: Int, x2: Int, y2: Int, private val color: Color) : Drawable {
+    override val top = y1
+    override val left = x1
+    override val bottom = y2
+    override val right = x2
+
+    override fun execute(graphics: Graphics, scroll: Int) {
+        graphics.color = color
+        graphics.fillRect(left, top - scroll, right - left, bottom - top)
+    }
+}

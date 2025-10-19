@@ -110,7 +110,7 @@ Inspired by [browser.engineering](https://browser.engineering) by Pavel Panchekh
 - [ ] 2-5: Emoji
 - [x] 2-6: about:blank
 - [ ] 2-7: Alternate text direction
-- [x] 3-1: Centered text
+- [ ] 3-1: Centered text
 - [x] 3-2: Superscripts
 - [ ] 3-3: Soft hyphens
 - [x] 3-4: Small caps
@@ -121,4 +121,9 @@ Inspired by [browser.engineering](https://browser.engineering) by Pavel Panchekh
 - [x] 4-4: Quoted attributes
 - [ ] 4-5: Syntax highlighting
 - [ ] 4-6: Mis-nested formatting tags
-
+- [x] 5-1: Links bar
+- [x] 5-2: Hidden head
+- [x] 5-3: Bullets
+- [x] 5-4: Table of contents
+- [ ] 5-5: Anonymous block boxes
+- [ ] 5-6: Run-ins
