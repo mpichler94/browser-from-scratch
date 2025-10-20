@@ -50,6 +50,28 @@ class URL(url: String) {
         }
     }
 
+    fun resolve(url: String): URL {
+        var tmpUrl = url
+        if ("://" in tmpUrl) {
+            return URL(tmpUrl)
+        }
+        if (!tmpUrl.startsWith("/")) {
+            var dir = path.substringBeforeLast('/')
+            while (tmpUrl.startsWith("../")) {
+                tmpUrl = tmpUrl.substringAfter("/")
+                if ("/" in dir) {
+                    dir = dir.substringBeforeLast("/")
+                }
+            }
+            tmpUrl = "$dir/$tmpUrl"
+        }
+        if (tmpUrl.startsWith("//")) {
+            return URL("$scheme:$tmpUrl")
+        } else {
+            return URL("$scheme://$host:$port$tmpUrl")
+        }
+    }
+
     fun withPath(path: String): URL = URL("$scheme://$host:$port$path")
 
     override fun equals(other: Any?): Boolean {

@@ -1,0 +1,42 @@
+html, body, article, section, nav, aside, h1, h2, h3, h4, h5, h6, hgroup, header, footer, address, p, hr, blockquote, ol, ul, menu, li, dl, dt, dd, figure, figcaption, main, div, table, form, fieldset, legend, details, summary {
+    display: block;
+}
+
+a {
+    color: blue;
+}
+
+b {
+    font-weight: bold;
+}
+
+i {
+    font-style: italic;
+}
+
+
+small {
+    font-size: 90%;
+}
+
+big {
+    font-size: 110%;
+}
+
+pre {
+    display: block;
+    background-color: gray;
+}
+
+code {
+    font-family: monospace;
+}
+
+sup {
+    font-size: 50%
+}
+
+abbr {
+    font-weight: bold;
+    font-size: 90%;
+}

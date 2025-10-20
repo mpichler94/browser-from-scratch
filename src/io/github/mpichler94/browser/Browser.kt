@@ -1,5 +1,9 @@
 package io.github.mpichler94.browser
 
+import io.github.mpichler94.browser.layout.DocumentLayout
+import io.github.mpichler94.browser.layout.Layout
+import io.github.mpichler94.browser.layout.paintTree
+import io.github.mpichler94.browser.layout.printTree
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.awt.Color
 import java.awt.Font
@@ -19,6 +23,15 @@ class Browser : JPanel() {
     private val logger = KotlinLogging.logger {}
     private val client = HttpClient()
     private val cache: LinkedHashMap<URL, CachedResponse> = LinkedHashMap(1000, 0.75f)
+    private val defaultStyleSheet: Map<Selector, Map<String, String>>
+    private val inheritedProperties =
+        mapOf(
+            "color" to "black",
+            "font-size" to "16px",
+            "font-style" to "normal",
+            "font-weight" to "normal",
+            "font-family" to "sans-serif"
+        )
 
     private val scrollStep = 10
 
@@ -28,9 +41,11 @@ class Browser : JPanel() {
     private var nodes: Token? = null
     private var document: Layout? = null
     private var displayList = emptyList<Drawable>()
+    private var rules = listOf<Pair<Selector, Map<String, String>>>()
 
     init {
         layout = null
+        background = Color.WHITE
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher {
             if (it.id == KeyEvent.KEY_PRESSED) {
@@ -57,6 +72,8 @@ class Browser : JPanel() {
                 reflow()
             }
         })
+
+        defaultStyleSheet = CssParser(Browser::class.java.getResource("/browser.css")!!.readText()).parse()
     }
 
     override fun addNotify() {
@@ -76,9 +93,10 @@ class Browser : JPanel() {
     fun load(url: String) {
         val showSource = url.startsWith("view-source:")
         this.url = url
+        val parsedUrl = url.substringAfter("view-source:")
 
         val response = try {
-            getResponse(if (showSource) url.substringAfter("view-source:") else url)
+            getResponse(parsedUrl)
         } catch (e: Throwable) {
             Response(200, mapOf(), "")
         }
@@ -90,6 +108,21 @@ class Browser : JPanel() {
             if (logger.isDebugEnabled()) {
                 nodes?.printTree()
             }
+            rules = defaultStyleSheet.toList()
+
+            val links = nodes!!.treeToList()
+                .filterIsInstance<Element>()
+                .filter { it.tag == "link" && it.attributes["rel"] == "stylesheet" }
+                .filter { "href" in it.attributes }
+                .map { it.attributes["href"]!! }
+
+            for (link in links) {
+                val styleUrl = URL(parsedUrl).resolve(link)
+                val body = client.request(Request(styleUrl)).body
+                rules += CssParser(body).parse().toList()
+            }
+
+            nodes!!.style()
             reflow()
         }
     }
@@ -183,6 +216,37 @@ class Browser : JPanel() {
     private fun showSource(body: String) {
         println(body)
     }
+
+    private fun Token.style() {
+        for ((property, defaultValue) in inheritedProperties) {
+            style[property] = parent?.style[property] ?: defaultValue
+        }
+
+        for ((selector, body) in rules.sortedBy { it.first.cascadePriority() }) {
+            if (!selector.matches(this)) {
+                continue
+            }
+            style.putAll(body)
+        }
+
+        if (this is Element && "style" in attributes) {
+            val pairs = CssParser(attributes["style"]!!).body()
+            style.putAll(pairs)
+        }
+
+        if (style["font-size"]?.endsWith("%") == true) {
+            val parentFontSize = if (parent != null) {
+                parent!!.style["font-size"]
+            } else {
+                inheritedProperties["font-size"]
+            }
+            val nodePct = style["font-size"]?.dropLast(1)?.toFloat()?.div(100) ?: 1.0f
+            val parentPx = parentFontSize?.dropLast(2)?.toFloat() ?: 16.0f
+            style["font-size"] = "${(parentPx * nodePct).toInt()}px"
+        }
+
+        children.forEach { it.style() }
+    }
 }
 
 private data class CachedResponse(val validUntil: Instant, val response: Response)
@@ -196,7 +260,7 @@ interface Drawable {
     fun execute(graphics: Graphics, scroll: Int)
 }
 
-class DrawText(x1: Int, y1: Int, val text: String, val font: Font) : Drawable {
+class DrawText(x1: Int, y1: Int, val text: String, val font: Font, val color: Color) : Drawable {
     override val top = y1
     override val left = x1
     override val bottom = y1 + font.getLineMetrics(text, frc).height.toInt()
@@ -206,10 +270,10 @@ class DrawText(x1: Int, y1: Int, val text: String, val font: Font) : Drawable {
         private val frc = FontRenderContext(null, true, true)
     }
 
-    fun withPos(x1: Int, y1: Int) = DrawText(x1, y1, text, font)
+    fun withPos(x1: Int, y1: Int) = DrawText(x1, y1, text, font, color)
 
     override fun execute(graphics: Graphics, scroll: Int) {
-        graphics.color = Color.black
+        graphics.color = color
         graphics.font = font
         graphics.drawString(text, left, top - scroll + font.getLineMetrics(text, frc).ascent.toInt())
     }

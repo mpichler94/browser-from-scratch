@@ -125,5 +125,14 @@ Inspired by [browser.engineering](https://browser.engineering) by Pavel Panchekh
 - [x] 5-2: Hidden head
 - [x] 5-3: Bullets
 - [x] 5-4: Table of contents
-- [ ] 5-5: Anonymous block boxes
+- [x] 5-5: Anonymous block boxes
 - [ ] 5-6: Run-ins
+- [x] 6-1: Fonts
+- [ ] 6-2: Width/height
+- [x] 6-3: Class selectors
+- [x] 6-4: display
+- [ ] 6-5: Shorthand properties
+- [ ] 6-6: Inline style sheets
+- [ ] 6-7: Fast descendant selectors
+- [ ] 6-8: Selector sequences
+- [ ] 6-9: !important

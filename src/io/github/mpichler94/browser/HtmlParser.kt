@@ -1,13 +1,13 @@
 package io.github.mpichler94.browser
 
-class HtmlParser(val body: String) {
+class HtmlParser(private val body: String) {
     private val entities = mapOf("lt" to "<", "gt" to ">")
     private val selfClosingTags = setOf(
         "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"
     )
     private val headTags = setOf("base", "basefont", "bgsound", "noscript", "link", "meta", "title", "style", "script")
 
-    val unfinished = mutableListOf<Element>()
+    private val unfinished = mutableListOf<Element>()
 
 
     fun parse(): Token {
@@ -20,7 +20,11 @@ class HtmlParser(val body: String) {
         for (c in body) {
             inScript = unfinished.lastOrNull()?.tag == "script"
             when (c) {
-                '"' if (inTag) -> inAttribute = !inAttribute
+                '"' if (inTag) -> {
+                    inAttribute = !inAttribute
+                    buffer += c
+                }
+
                 '<' if (!inAttribute && !inScript) -> {
                     inTag = true
                     if (buffer.isNotBlank()) {
@@ -180,22 +184,33 @@ fun Token.printTree(indent: Int = 0) {
     }
 }
 
+fun Token.treeToList(): List<Token> {
+    val list = mutableListOf<Token>()
+    list.add(this)
+    children.forEach { list.addAll(it.treeToList()) }
+    return list
+}
+
 sealed interface Token {
+    val parent: Token?
     val children: MutableList<Token>
+    val style: MutableMap<String, String>
 }
 
 private data class Tag(val tag: String, val attributes: Map<String, String>)
 
-data class Text(val text: String, val parent: Token?) : Token {
+data class Text(val text: String, override val parent: Token?) : Token {
     override val children = mutableListOf<Token>()
+    override val style = mutableMapOf<String, String>()
 
     override fun toString(): String {
         return text
     }
 }
 
-data class Element(val tag: String, val attributes: Map<String, String>, val parent: Token?) : Token {
+data class Element(val tag: String, val attributes: Map<String, String>, override val parent: Token?) : Token {
     override val children = mutableListOf<Token>()
+    override val style = mutableMapOf<String, String>()
 
     override fun toString(): String {
         val attrString = attributes.map {
