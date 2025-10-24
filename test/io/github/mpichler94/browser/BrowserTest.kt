@@ -39,32 +39,30 @@ class BrowserTest {
 
     @Test
     fun `should load example page`() {
-        Browser().load("http://www.example.com/index.html")
+        Browser("http://www.example.com/index.html")
     }
 
     @Test
     fun `should load simple sample`() {
         val url = "http://localhost:8080/example1-simple.html"
-        val browser = Browser()
-        browser.load(url)
-        browser.load(url)
+        val browser = Browser(url)
     }
 
     @Test
     fun `should load simple sample from file`() {
         val url = "file://testResources/example1-simple.html"
-        Browser().load(url)
+        Browser(url)
     }
 
     @Test
     fun `should load data url`() {
         val url = "data:text/html,Hello world!"
-        Browser().load(url)
+        Browser(url)
     }
 
     @Test
     fun `should show source with view-source`() {
         val url = "view-source:file://testResources/example1-simple.html"
-        Browser().load(url)
+        Browser(url)
     }
 }

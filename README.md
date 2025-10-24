@@ -136,3 +136,14 @@ Inspired by [browser.engineering](https://browser.engineering) by Pavel Panchekh
 - [ ] 6-7: Fast descendant selectors
 - [ ] 6-8: Selector sequences
 - [ ] 6-9: !important
+- [x] 7-1: Backspace
+- [x] 7-2: Middle-click
+- [x] 7-3: Window title
+- [x] 7-4: Forward
+- [x] 7-5: Fragments
+- [ ] 7-6: Search
+- [ ] 7-7: Visited links
+- [ ] 7-8: Bookmarks
+- [x] 7-9: Cursor
+- [ ] 7-10: Multiple windows
+- [ ] 7-11: Clicks via the display list

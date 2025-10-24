@@ -10,20 +10,19 @@ import java.awt.Color
 import java.awt.Font
 import java.awt.GraphicsEnvironment
 import java.awt.font.FontRenderContext
+import java.awt.font.LineMetrics
+
+private val fontCache = mutableMapOf<FontKey, Font>()
 
 internal class InlineLayout(
     private val nodes: List<Token>,
     private val parent: Layout,
     private val previous: Layout?,
 ) : Layout {
-    private val vStep = 50
     private val frc = FontRenderContext(null, true, true)
 
-    private val fontCache = mutableMapOf<FontKey, Font>()
-    override val children = mutableListOf<Layout>()
+    override val children = mutableListOf<LineLayout>()
     private var cursorX = 0
-    private var cursorY = 0
-    private var line = mutableListOf<DrawText>()
     private var center = false
     private var sup = false
     private var abbr = false
@@ -36,8 +35,7 @@ internal class InlineLayout(
         private set
     override var height = 0
         private set
-
-    private val displayList = mutableListOf<DrawText>()
+    override val node: Token get() = nodes.first()
 
     override fun layout() {
         if (previous is InlineLayout) {
@@ -50,15 +48,14 @@ internal class InlineLayout(
 
         width = parent.width
         cursorX = 0
-        cursorY = 0
-        line = mutableListOf()
 
+        newLine(nodes.first())
         nodes.forEach { recurse(it) }
-        flush()
 
         children.forEach { it.layout() }
 
-        height = cursorY
+        width = children.lastOrNull()?.width ?: parent.width
+        height = children.sumOf { it.height }
     }
 
     private fun recurse(tree: Token) {
@@ -74,17 +71,15 @@ internal class InlineLayout(
     private fun text(node: Text) {
         val font = getFont(node.style)
         val space = font.getStringBounds(" ", frc).width.toInt()
-        val color = node.style["color"]?.let { getColor(it) } ?: Color.BLACK
         if (pre) {
-            word(node.text, space, font, color)
-            return
+            return word(node, node.text, space, font)
         }
         for (word in node.text.split(' ')) {
-            word(if (abbr) word.uppercase() else word, space, font, color)
+            word(node, if (abbr) word.uppercase() else word, space, font)
         }
     }
 
-    private fun word(word: String, space: Int, font: Font, color: Color) {
+    private fun word(node: Text, word: String, space: Int, font: Font) {
         if (word.isBlank()) {
             return
         }
@@ -92,17 +87,25 @@ internal class InlineLayout(
         val bounds = font.getStringBounds(word, frc)
         val w = bounds.width.toInt()
         if (cursorX + w > width) {
-            flush()
+            newLine(node)
         }
 
-        val y = if (sup) cursorY - bounds.height.toInt() / 2 else cursorY
-        line.add(DrawText(cursorX, y, word.trim(), font, color))
         cursorX += w + space
+
+        val line = children.last()
+        line.addText(node, word)
+    }
+
+    private fun newLine(node: Token) {
+        cursorX = 0
+        val lastLine = children.lastOrNull()
+        val newLine = LineLayout(node, this, lastLine)
+        children.add(newLine)
     }
 
     private fun openTag(tag: Element) {
         when (tag.tag) {
-            "br" -> flush()
+            "br" -> newLine(tag)
             "h1" -> center = true
             "sup" -> sup = true
             "abbr" -> abbr = true
@@ -114,12 +117,11 @@ internal class InlineLayout(
     private fun closeTag(tag: Element) {
         when (tag.tag) {
             "p" -> {
-                flush()
-                cursorY += vStep
+                newLine(tag)
             }
 
             "h1" -> {
-                flush()
+                newLine(tag)
                 center = false
             }
 
@@ -127,61 +129,6 @@ internal class InlineLayout(
             "abbr" -> abbr = false
             "pre" -> pre = false
         }
-    }
-
-    private fun flush() {
-        val maxAscend = line.maxOfOrNull { it.font.getLineMetrics(it.text, frc).ascent.toInt() } ?: 0
-        val baseline = cursorY + 1.25 * maxAscend
-        val maxDescend = line.maxOfOrNull { it.font.getLineMetrics(it.text, frc).descent.toInt() } ?: 0
-
-        cursorY = (baseline + 1.25 * maxDescend).toInt()
-        width = cursorX
-        cursorX = 0
-
-        for (element in line) {
-            val x = this.x + element.left
-            val y = this.y + baseline.toInt() - element.font.getLineMetrics(element.text, frc).ascent.toInt()
-            displayList.add(DrawText(x, y, element.text, element.font, element.color))
-        }
-
-        line.clear()
-    }
-
-    private fun getFont(cssStyle: Map<String, String>): Font {
-        val weight = when (cssStyle["font-weight"]) {
-            "bold" -> Font.BOLD
-            else -> Font.PLAIN
-        }
-        val style = when (cssStyle["font-style"]) {
-            "italic" -> Font.ITALIC
-            else -> Font.PLAIN
-        }
-        val size = ((cssStyle["font-size"]?.dropLast(2)?.toIntOrNull() ?: 16).toFloat() * 0.75).toInt()
-
-        val fontFamilies =
-            (cssStyle["font-family"]?.split(',') ?: listOf("sans-serif")).map { it.trim().trim('\'', '"') }
-        var fontFamily = fontFamilies.last()
-        for (family in fontFamilies) {
-            if (family in GraphicsEnvironment.getLocalGraphicsEnvironment().availableFontFamilyNames) {
-                fontFamily = family
-                break
-            }
-        }
-
-        when (fontFamily.lowercase()) {
-            "serif" -> fontFamily = Font.SERIF
-            "sans-serif" -> fontFamily = Font.SANS_SERIF
-            "monospace" -> fontFamily = Font.MONOSPACED
-        }
-
-        val key = FontKey(fontFamily, size, weight, style)
-
-        if (key !in fontCache) {
-            val font = Font(key.font, key.weight + key.style, key.size)
-            fontCache[key] = font
-            return font
-        }
-        return fontCache[key]!!
     }
 
     override fun paint(): List<Drawable> {
@@ -202,13 +149,137 @@ internal class InlineLayout(
             }
         }
 
-        cmds.addAll(displayList)
-
         return cmds
     }
 
     override fun toString(): String {
-        return "Block { x=$x, y=$y, width=$width, height=$height }"
+        return "Inline { x=$x, y=$y, width=$width, height=$height }"
     }
 }
 
+internal class LineLayout(override val node: Token, val parent: InlineLayout, val previous: LineLayout?) : Layout {
+    override var x: Int = 0
+        private set
+    override var y: Int = 0
+        private set
+    override var width: Int = 0
+        private set
+    override var height: Int = 0
+        private set
+    override val children: MutableList<TextLayout> = mutableListOf()
+
+    override fun layout() {
+        x = parent.x
+        y = previous?.let { it.y + it.height } ?: parent.y
+
+        children.forEach { it.layout() }
+
+        val maxAscend = children.maxOfOrNull { it.lineMetrics.ascent.toInt() } ?: 0
+        val maxDescend = children.maxOfOrNull { it.lineMetrics.descent.toInt() } ?: 0
+        val baseline = y + 1.25 * maxAscend
+
+        for (word in children) {
+            word.y = (baseline - word.lineMetrics.ascent).toInt()
+        }
+
+        width = children.sumOf { it.width }
+        height = (1.25 * (maxAscend + maxDescend)).toInt()
+    }
+
+    fun addText(node: Text, word: String) {
+        val text = TextLayout(node, word, this, children.lastOrNull())
+        children.add(text)
+    }
+
+    override fun paint(): List<Drawable> = emptyList()
+
+    override fun toString(): String {
+        return "Line { x=$x, y=$y, width=$width, height=$height }"
+    }
+}
+
+internal class TextLayout(
+    override val node: Text,
+    val word: String,
+    val parent: LineLayout,
+    val previous: TextLayout?
+) :
+    Layout {
+    private val frc = FontRenderContext(null, true, true)
+    private lateinit var font: Font
+    override var x: Int = 0
+        private set
+    override var y: Int = 0
+    override var width: Int = 0
+        private set
+    override var height: Int = 0
+        private set
+    override val children: List<Layout> = emptyList()
+
+    lateinit var lineMetrics: LineMetrics
+        private set
+
+
+    override fun layout() {
+        font = getFont(node.style)
+        width = font.getStringBounds(word, frc).width.toInt()
+
+        if (previous != null) {
+            val space = font.getStringBounds(" ", frc).width.toInt()
+            x = previous.x + previous.width + space
+        } else {
+            x = parent.x
+        }
+
+        lineMetrics = font.getLineMetrics(word, frc)
+        height = lineMetrics.height.toInt()
+    }
+
+    override fun paint(): List<Drawable> {
+        val color = node.style["color"]?.let { getColor(it) } ?: Color.BLACK
+        return listOf(DrawText(x, y, word, font, color))
+    }
+
+    override fun toString(): String {
+        return "Text { x=$x, y=$y, width=$width, height=$height }"
+    }
+}
+
+private data class FontKey(val font: String, val size: Int, val weight: Int, val style: Int)
+
+private fun getFont(cssStyle: Map<String, String>): Font {
+    val weight = when (cssStyle["font-weight"]) {
+        "bold" -> Font.BOLD
+        else -> Font.PLAIN
+    }
+    val style = when (cssStyle["font-style"]) {
+        "italic" -> Font.ITALIC
+        else -> Font.PLAIN
+    }
+    val size = ((cssStyle["font-size"]?.dropLast(2)?.toIntOrNull() ?: 16).toFloat() * 0.75).toInt()
+
+    val fontFamilies =
+        (cssStyle["font-family"]?.split(',') ?: listOf("sans-serif")).map { it.trim().trim('\'', '"') }
+    var fontFamily = fontFamilies.last()
+    for (family in fontFamilies) {
+        if (family in GraphicsEnvironment.getLocalGraphicsEnvironment().availableFontFamilyNames) {
+            fontFamily = family
+            break
+        }
+    }
+
+    when (fontFamily.lowercase()) {
+        "serif" -> fontFamily = Font.SERIF
+        "sans-serif" -> fontFamily = Font.SANS_SERIF
+        "monospace" -> fontFamily = Font.MONOSPACED
+    }
+
+    val key = FontKey(fontFamily, size, weight, style)
+
+    if (key !in fontCache) {
+        val font = Font(key.font, key.weight + key.style, key.size)
+        fontCache[key] = font
+        return font
+    }
+    return fontCache[key]!!
+}

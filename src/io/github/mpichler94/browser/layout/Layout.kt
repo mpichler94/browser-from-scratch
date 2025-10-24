@@ -9,23 +9,21 @@ interface Layout {
     val y: Int
     val width: Int
     val height: Int
+    val node: Token
     val children: List<Layout>
 
     fun layout()
     fun paint(): List<Drawable>
 }
 
-internal class DocumentLayout(private val node: Token, browserWidth: Int) : Layout {
+internal class DocumentLayout(override val node: Token, browserWidth: Int) : Layout {
     private val hStep = 13
     private val vStep = 50
 
     override val children = mutableListOf<Layout>()
-    override var x: Int = hStep
-        private set
-    override var y: Int = vStep
-        private set
-    override var width: Int = browserWidth - 2 * hStep
-        private set
+    override val x: Int = hStep
+    override val y: Int = vStep
+    override val width: Int = browserWidth - 2 * hStep
     override var height: Int = 0
         private set
 
@@ -42,8 +40,6 @@ internal class DocumentLayout(private val node: Token, browserWidth: Int) : Layo
         return "Document { x=$x, y=$y, width=$width, height=$height }"
     }
 }
-
-internal data class FontKey(val font: String, val size: Int, val weight: Int, val style: Int)
 
 internal enum class LayoutType { BLOCK, INLINE }
 
@@ -68,7 +64,14 @@ fun Layout.treeToList(): List<Layout> {
     return list
 }
 
-internal fun getColor(value: String): Color {
+fun Layout.toList(): List<Layout> {
+    val list = mutableListOf<Layout>()
+    list.add(this)
+    children.forEach { list.addAll(it.toList()) }
+    return list
+}
+
+internal fun getColor(value: String): Color? {
     if (value.startsWith("#")) {
         if (value.length == 4) {
             val r = value[1].digitToInt(16)
@@ -87,7 +90,7 @@ internal fun getColor(value: String): Color {
             return Color.decode(value.drop(1).take(6))
         }
     } else {
-        return htmlColorMap[value] ?: Color.decode(value)
+        return htmlColorMap[value]
     }
 }
 

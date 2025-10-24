@@ -151,7 +151,7 @@ interface Selector {
     fun matches(node: Token): Boolean
 }
 
-private class TagSelector(private val tag: String) : Selector {
+internal class TagSelector(private val tag: String) : Selector {
     override val priority = 1
 
     override fun matches(node: Token): Boolean {
@@ -173,7 +173,7 @@ private class TagSelector(private val tag: String) : Selector {
 
 }
 
-private class DescendantSelector(private val ancestor: Selector, private val descendant: Selector) : Selector {
+internal class DescendantSelector(private val ancestor: Selector, private val descendant: Selector) : Selector {
     override val priority = ancestor.priority + descendant.priority
 
     override fun matches(node: Token): Boolean {
@@ -211,7 +211,7 @@ private class DescendantSelector(private val ancestor: Selector, private val des
     }
 }
 
-private class ClassSelector(name: String) : Selector {
+internal class ClassSelector(name: String) : Selector {
     override val priority: Int
 
     val tag: String?
@@ -264,7 +264,7 @@ private class ClassSelector(name: String) : Selector {
     }
 }
 
-private class ListSelector(vararg selectors: Selector) : Selector {
+internal class ListSelector(vararg selectors: Selector) : Selector {
     private val selectors = mutableListOf(*selectors)
 
     override val priority: Int get() = selectors.maxOf { it.cascadePriority() }

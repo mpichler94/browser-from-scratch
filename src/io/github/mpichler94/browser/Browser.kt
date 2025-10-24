@@ -1,292 +1,122 @@
 package io.github.mpichler94.browser
 
-import io.github.mpichler94.browser.layout.DocumentLayout
-import io.github.mpichler94.browser.layout.Layout
-import io.github.mpichler94.browser.layout.paintTree
-import io.github.mpichler94.browser.layout.printTree
-import io.github.oshai.kotlinlogging.KotlinLogging
 import java.awt.Color
-import java.awt.Font
 import java.awt.Graphics
 import java.awt.KeyboardFocusManager
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
 import java.awt.event.KeyEvent
-import java.awt.font.FontRenderContext
-import java.io.File
-import java.time.Instant
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
+import java.util.concurrent.Executors
+import javax.swing.JFrame
 import javax.swing.JPanel
-import kotlin.math.max
-import kotlin.math.min
 
-class Browser : JPanel() {
-    private val logger = KotlinLogging.logger {}
-    private val client = HttpClient()
-    private val cache: LinkedHashMap<URL, CachedResponse> = LinkedHashMap(1000, 0.75f)
-    private val defaultStyleSheet: Map<Selector, Map<String, String>>
-    private val inheritedProperties =
-        mapOf(
-            "color" to "black",
-            "font-size" to "16px",
-            "font-style" to "normal",
-            "font-weight" to "normal",
-            "font-family" to "sans-serif"
-        )
-
-    private val scrollStep = 10
-
-    private var url = "about:blank"
-    private var scroll = 0
-
-    private var nodes: Token? = null
-    private var document: Layout? = null
-    private var displayList = emptyList<Drawable>()
-    private var rules = listOf<Pair<Selector, Map<String, String>>>()
+class Browser(url: String) : JPanel() {
+    val tabs = mutableListOf<Tab>()
+    var activeTab: Tab? = null
+        set(value) {
+            field = value
+            value?.resize(width, height)
+            repaint()
+        }
+    private val executor = Executors.newSingleThreadExecutor { Thread(it, "Worker") }
+    private val chrome = Chrome(this)
 
     init {
         layout = null
         background = Color.WHITE
+        isOpaque
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher {
             if (it.id == KeyEvent.KEY_PRESSED) {
                 when (it.keyCode) {
-                    KeyEvent.VK_DOWN -> scrollDown()
-                    KeyEvent.VK_UP -> scrollUp()
-                    KeyEvent.VK_F5 -> load(url)
+                    KeyEvent.VK_DOWN -> activeTab?.scrollDown()
+                    KeyEvent.VK_UP -> activeTab?.scrollUp()
+                    KeyEvent.VK_F5 -> activeTab?.reload()
+                    else -> chrome.keyPressed(it.keyCode)
                 }
+                repaint()
+            } else if (it.id == KeyEvent.KEY_TYPED && it.keyChar.code in 0x20..0x7e) {
+                chrome.keyTyped(it.keyChar)
             }
             false
         }
 
+        addMouseListener(object : MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent) {
+                if (e.y < chrome.bottom) {
+                    chrome.mouseClicked(e.button, e.x, e.y)
+                } else {
+                    activeTab?.mouseClicked(e.button, e.x, e.y - chrome.bottom)
+                }
+                repaint()
+            }
+        })
+
         addMouseWheelListener {
             if (it.wheelRotation > 0) {
-                scrollDown()
+                activeTab?.scrollDown()
             } else {
-                scrollUp()
+                activeTab?.scrollUp()
             }
+            repaint()
         }
 
         addComponentListener(object : ComponentAdapter() {
             override fun componentResized(e: ComponentEvent) {
-                scroll = max(0, min(scroll, (document?.height ?: 0) - height))
-                reflow()
+                executor.submit {
+                    chrome.resize()
+                    activeTab?.resize(width, height - chrome.bottom)
+                }
             }
         })
 
-        defaultStyleSheet = CssParser(Browser::class.java.getResource("/browser.css")!!.readText()).parse()
+        newTab(url)
+    }
+
+    fun newTab(url: String) {
+        val tab = Tab(this)
+        tab.load(url)
+        activeTab = tab
+        tabs.add(tab)
+    }
+
+    fun removeTab(index: Int) {
+        var newIndex = tabs.indexOf(activeTab)
+
+        tabs.removeAt(index)
+        if (newIndex >= tabs.size) {
+            newIndex = tabs.size - 1
+        }
+        activeTab = tabs[newIndex]
     }
 
     override fun addNotify() {
         super.addNotify()
 
-        graphics.font = Font("Sans", Font.PLAIN, 16)
-
-        reflow()
+        executor.submit {
+            chrome.resize()
+            activeTab?.resize(width, height)
+            repaint()
+        }
     }
 
     override fun paintComponent(g: Graphics) {
         super.paintComponent(g)
 
-        draw(g)
+        setTitle()
+
+        activeTab?.draw(g, chrome.bottom)
+
+        chrome.paint().forEach { it.execute(g, 0) }
     }
 
-    fun load(url: String) {
-        val showSource = url.startsWith("view-source:")
-        this.url = url
-        val parsedUrl = url.substringAfter("view-source:")
-
-        val response = try {
-            getResponse(parsedUrl)
-        } catch (e: Throwable) {
-            Response(200, mapOf(), "")
+    private fun setTitle() {
+        var parent = parent
+        while (parent != null && parent !is JFrame) {
+            parent = parent.parent
         }
-
-        if (showSource) {
-            showSource(response.body)
-        } else {
-            nodes = HtmlParser(response.body).parse()
-            if (logger.isDebugEnabled()) {
-                nodes?.printTree()
-            }
-            rules = defaultStyleSheet.toList()
-
-            val links = nodes!!.treeToList()
-                .filterIsInstance<Element>()
-                .filter { it.tag == "link" && it.attributes["rel"] == "stylesheet" }
-                .filter { "href" in it.attributes }
-                .map { it.attributes["href"]!! }
-
-            for (link in links) {
-                val styleUrl = URL(parsedUrl).resolve(link)
-                val body = client.request(Request(styleUrl)).body
-                rules += CssParser(body).parse().toList()
-            }
-
-            nodes!!.style()
-            reflow()
-        }
-    }
-
-    private fun getResponse(url: String): Response {
-        val parsedUrl = URL(url)
-
-        return if (parsedUrl.scheme == "data") {
-            Response(body = url.substringAfter(","))
-        } else if (parsedUrl.scheme == "file") {
-            Response(body = File(parsedUrl.path).readText())
-        } else {
-            if (parsedUrl in cache && cache[parsedUrl]!!.validUntil > Instant.now()) {
-                cache[parsedUrl]!!.response
-            } else {
-                val response = client.request(parsedUrl.createRequest())
-                if (response.headers["cache-control"]?.contains("max-age") == true) {
-                    val maxAge = response.headers["cache-control"]!!.substringAfter("max-age=").toInt()
-                    cache[parsedUrl] = CachedResponse(
-                        Instant.now().plusSeconds(maxAge.toLong()),
-                        response
-                    )
-
-                    // TODO: more sophisticated cache eviction
-                    if (cache.size > 740) {
-                        cache.remove(cache.keys.first())
-                    }
-                }
-                response
-            }
-        }
-    }
-
-    private fun reflow() {
-        nodes?.run {
-            document = DocumentLayout(this, width)
-            document!!.layout()
-            if (logger.isDebugEnabled()) {
-                document!!.printTree()
-            }
-            displayList = document!!.paintTree()
-        }
-        repaint()
-    }
-
-    private fun draw(graphics: Graphics) {
-        for (cmd in displayList) {
-            if (cmd.top > scroll + height || cmd.bottom < scroll) {
-                continue
-            }
-            cmd.execute(graphics, scroll)
-        }
-
-        drawScrollBar(graphics)
-    }
-
-    private fun drawScrollBar(graphics: Graphics) {
-        val scrollPosition = height * scroll / (document?.height ?: 1)
-        val scrollBarHeight = height * height / (document?.height ?: 1)
-        if (scrollBarHeight <= height) {
-            graphics.fillRect(width - 10, scrollPosition, 10, scrollBarHeight)
-        }
-    }
-
-    private fun scrollDown() {
-        if (scroll >= (document?.height ?: 0) - height) {
-            return
-        }
-
-        scroll += scrollStep
-        repaint()
-    }
-
-    private fun scrollUp() {
-        if (scroll <= 0) {
-            return
-        }
-
-        scroll -= scrollStep
-        repaint()
-    }
-
-
-    private fun URL.createRequest(headers: Map<String, String> = mapOf()): Request {
-        val allHeaders =
-            mapOf("Host" to host, "Connection" to "keep-alive", "User-Agent" to "Browser from Scratch") + headers
-        return Request(this, "GET", allHeaders)
-    }
-
-
-    private fun showSource(body: String) {
-        println(body)
-    }
-
-    private fun Token.style() {
-        for ((property, defaultValue) in inheritedProperties) {
-            style[property] = parent?.style[property] ?: defaultValue
-        }
-
-        for ((selector, body) in rules.sortedBy { it.first.cascadePriority() }) {
-            if (!selector.matches(this)) {
-                continue
-            }
-            style.putAll(body)
-        }
-
-        if (this is Element && "style" in attributes) {
-            val pairs = CssParser(attributes["style"]!!).body()
-            style.putAll(pairs)
-        }
-
-        if (style["font-size"]?.endsWith("%") == true) {
-            val parentFontSize = if (parent != null) {
-                parent!!.style["font-size"]
-            } else {
-                inheritedProperties["font-size"]
-            }
-            val nodePct = style["font-size"]?.dropLast(1)?.toFloat()?.div(100) ?: 1.0f
-            val parentPx = parentFontSize?.dropLast(2)?.toFloat() ?: 16.0f
-            style["font-size"] = "${(parentPx * nodePct).toInt()}px"
-        }
-
-        children.forEach { it.style() }
-    }
-}
-
-private data class CachedResponse(val validUntil: Instant, val response: Response)
-
-interface Drawable {
-    val top: Int
-    val left: Int
-    val bottom: Int
-    val right: Int
-
-    fun execute(graphics: Graphics, scroll: Int)
-}
-
-class DrawText(x1: Int, y1: Int, val text: String, val font: Font, val color: Color) : Drawable {
-    override val top = y1
-    override val left = x1
-    override val bottom = y1 + font.getLineMetrics(text, frc).height.toInt()
-    override val right = y1 + font.getStringBounds(text, frc).width.toInt()
-
-    companion object {
-        private val frc = FontRenderContext(null, true, true)
-    }
-
-    fun withPos(x1: Int, y1: Int) = DrawText(x1, y1, text, font, color)
-
-    override fun execute(graphics: Graphics, scroll: Int) {
-        graphics.color = color
-        graphics.font = font
-        graphics.drawString(text, left, top - scroll + font.getLineMetrics(text, frc).ascent.toInt())
-    }
-}
-
-class DrawRect(x1: Int, y1: Int, x2: Int, y2: Int, private val color: Color) : Drawable {
-    override val top = y1
-    override val left = x1
-    override val bottom = y2
-    override val right = x2
-
-    override fun execute(graphics: Graphics, scroll: Int) {
-        graphics.color = color
-        graphics.fillRect(left, top - scroll, right - left, bottom - top)
+        parent?.title = activeTab?.title ?: "Browser"
     }
 }

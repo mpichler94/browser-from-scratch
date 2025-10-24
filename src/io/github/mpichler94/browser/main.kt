@@ -8,7 +8,7 @@ import javax.swing.SwingUtilities
 fun main(args: Array<String>) {
     val frame = MainFrame()
 
-    val browser = Browser()
+    val browser = Browser(args[0])
     SwingUtilities.invokeLater {
         frame.add(browser, BorderLayout.CENTER)
         frame.revalidate()
@@ -25,8 +25,6 @@ fun main(args: Array<String>) {
 //        pre, code { hyphens: none; -webkit-hyphens: none; font-family: 'Inconsolata', monospace; }
 //    """.trimIndent()
     val style = CssParser(body).parse()
-
-    browser.load(args[0])
 }
 
 

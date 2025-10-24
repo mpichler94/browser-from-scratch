@@ -8,7 +8,7 @@ import io.github.mpichler94.browser.Token
 import java.awt.Color
 
 internal class BlockLayout(
-    private val node: Token,
+    override val node: Token,
     private val parent: Layout,
     private val previous: Layout? = null,
 ) : Layout {

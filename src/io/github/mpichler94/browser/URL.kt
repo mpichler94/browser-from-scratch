@@ -51,6 +51,10 @@ class URL(url: String) {
     }
 
     fun resolve(url: String): URL {
+        if (url.isBlank()) {
+            return this
+        }
+
         var tmpUrl = url
         if ("://" in tmpUrl) {
             return URL(tmpUrl)
@@ -95,6 +99,15 @@ class URL(url: String) {
         return result
     }
 
+    override fun toString(): String {
+        var portPart = ":$port"
+        if (scheme == "https" && port == 443) {
+            portPart = ""
+        } else if (scheme == "http" && port == 80) {
+            portPart = ""
+        }
 
+        return "$scheme://$host$portPart$path"
+    }
 }
 
