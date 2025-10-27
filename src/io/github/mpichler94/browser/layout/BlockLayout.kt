@@ -34,7 +34,7 @@ internal class BlockLayout(
         marker?.let { inline.add(it) }
 
         for (child in node.children) {
-            if (node is Element && node.tag == "head") {
+            if (child is Element && child.tag == "head") {
                 continue
             }
 
@@ -46,6 +46,16 @@ internal class BlockLayout(
                     previous = next
                 }
                 val next = BlockLayout(child, this, previous)
+                children.add(next)
+                previous = next
+            } else if (child is Element && child.tag in listOf("input", "button")) {
+                if (inline.isNotEmpty()) {
+                    val next = InlineLayout(inline.toList(), this, previous)
+                    inline.clear()
+                    children.add(next)
+                    previous = next
+                }
+                val next = InputLayout(child, this, previous)
                 children.add(next)
                 previous = next
             } else {
@@ -67,7 +77,7 @@ internal class BlockLayout(
 
     private fun getToc(): Layout? {
         return if (node is Element && node.tag == "nav" && node.attributes["id"] == "toc") {
-            val token = Element("div", mapOf("class" to "toc"), node)
+            val token = Element("div", mutableMapOf("class" to "toc"), node)
             token.style.putAll(node.style)
             val toc = Text("Table of Contents", token)
             toc.style.putAll(node.style)
@@ -80,7 +90,7 @@ internal class BlockLayout(
 
     private fun getLiMarker(): Token? {
         return if (node is Element && node.tag == "li") {
-            val token = Element("li", mapOf(), node)
+            val token = Element("li", mutableMapOf(), node)
             token.style.putAll(node.style)
             token
         } else {
@@ -114,7 +124,6 @@ internal class BlockLayout(
                     DrawRect(x, y, x + width, y + height, Color.lightGray)
                 )
 
-                node.tag == "li" -> cmds.add(DrawRect(x, y - 4 + height / 2, x + 8, y + 4 + height / 2, Color.black))
                 node.tag == "div" && node.attributes["class"] == "toc" -> cmds.add(
                     DrawRect(x, y, x + width, y + height, Color.gray)
                 )

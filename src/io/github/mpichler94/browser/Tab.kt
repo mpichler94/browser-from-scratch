@@ -7,8 +7,10 @@ import io.github.mpichler94.browser.layout.printTree
 import io.github.mpichler94.browser.layout.toList
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.awt.Graphics
+import java.awt.event.KeyEvent
 import java.awt.event.MouseEvent
 import java.io.File
+import java.net.URLEncoder
 import java.time.Instant
 
 class Tab(private val browser: Browser) {
@@ -43,6 +45,7 @@ class Tab(private val browser: Browser) {
     private var document: Layout? = null
     private var displayList = emptyList<Drawable>()
     private var rules = listOf<Pair<Selector, Map<String, String>>>()
+    private var focus: Element? = null
 
     val title: String
         get() {
@@ -76,6 +79,8 @@ class Tab(private val browser: Browser) {
     }
 
     fun mouseClicked(button: Int, x: Int, y: Int) {
+        focus?.let { it.isFocused = false }
+
         val y = y + scroll
 
         val objects = document?.toList()?.filter {
@@ -96,8 +101,41 @@ class Tab(private val browser: Browser) {
                     return browser.newTab(targetUrl)
                 }
                 return load(targetUrl)
+            } else if (element is Element && element.tag == "input") {
+                element.attributes["value"] = ""
+                focus = element
+                element.isFocused = true
+            } else if (element is Element && element.tag == "button") {
+                while (element != null) {
+                    if (element is Element && element.tag == "form" && "action" in element.attributes) {
+                        return submitForm(element)
+                    }
+                    element = element.parent
+                }
             }
-            element = element.parent
+            element = element?.parent
+        }
+        render()
+    }
+
+    fun keyPressed(keyCode: Int) {
+        if (keyCode == KeyEvent.VK_ENTER) {
+            if (focus != null) {
+                var element = focus!!.parent
+                while (element != null) {
+                    if (element is Element && element.tag == "form" && "action" in element.attributes) {
+                        return submitForm(element)
+                    }
+                    element = element.parent
+                }
+            }
+        }
+    }
+
+    fun keyTyped(key: Char) {
+        if (focus != null) {
+            focus!!.attributes["value"] = focus!!.attributes["value"] + key
+            render()
         }
     }
 
@@ -127,15 +165,19 @@ class Tab(private val browser: Browser) {
         doLoad()
     }
 
-    fun load(url: String) {
+    fun load(url: String, body: String? = null) {
         if (url != rawUrl) {
             history.add(url)
             historyIndex++
         }
-        doLoad()
+        doLoad(body)
     }
 
-    private fun doLoad() {
+    fun blur() {
+        focus = null
+    }
+
+    private fun doLoad(body: String? = null) {
         val url = history[historyIndex]
         val showSource = url.startsWith("view-source:")
         this.rawUrl = url
@@ -144,7 +186,7 @@ class Tab(private val browser: Browser) {
 
         val response = try {
             this.url = URL(parsedUrl)
-            getResponse(parsedUrl)
+            getResponse(parsedUrl, body)
         } catch (e: Throwable) {
             this.url = null
             Response(200, mapOf(), "")
@@ -183,7 +225,7 @@ class Tab(private val browser: Browser) {
         }
     }
 
-    private fun getResponse(url: String): Response {
+    private fun getResponse(url: String, body: String? = null): Response {
         val parsedUrl = URL(url)
 
         return if (parsedUrl.scheme == "data") {
@@ -191,10 +233,14 @@ class Tab(private val browser: Browser) {
         } else if (parsedUrl.scheme == "file") {
             Response(body = File(parsedUrl.path).readText())
         } else {
-            if (parsedUrl in cache && cache[parsedUrl]!!.validUntil > Instant.now()) {
+            if (body == null && parsedUrl in cache && cache[parsedUrl]!!.validUntil > Instant.now()) {
                 cache[parsedUrl]!!.response
             } else {
-                val response = client.request(parsedUrl.createRequest())
+                val response = if (body != null) {
+                    client.request(parsedUrl.createRequest("POST", body = body))
+                } else {
+                    client.request(parsedUrl.createRequest())
+                }
                 if (response.headers["cache-control"]?.contains("max-age") == true) {
                     val maxAge = maxAgePattern.find(response.headers["cache-control"]!!)?.groupValues[1]?.toInt() ?: 0
                     cache[parsedUrl] = CachedResponse(
@@ -221,6 +267,11 @@ class Tab(private val browser: Browser) {
             }
             displayList = document!!.paintTree()
         }
+    }
+
+    private fun render() {
+        nodes!!.style()
+        layout()
     }
 
     fun draw(graphics: Graphics, yOffset: Int = 0) {
@@ -260,11 +311,29 @@ class Tab(private val browser: Browser) {
         scroll -= scrollStep
     }
 
+    private fun submitForm(form: Element) {
+        val inputs = form.treeToList()
+            .filterIsInstance<Element>()
+            .filter { it.tag == "input" && "name" in it.attributes }
 
-    private fun URL.createRequest(headers: Map<String, String> = mapOf()): Request {
+        val body = inputs.map {
+            val name = URLEncoder.encode(it.attributes["name"]!!, Charsets.UTF_8).replace("+", "%20")
+            val value = URLEncoder.encode(it.attributes["value"] ?: "", Charsets.UTF_8).replace("+", "%20")
+            "$name=$value"
+        }.joinToString("&")
+        val url = url!!.resolve(form.attributes["action"]!!)
+        load(url.toString(), body)
+    }
+
+
+    private fun URL.createRequest(
+        method: String = "GET",
+        headers: Map<String, String> = mapOf(),
+        body: String? = null
+    ): Request {
         val allHeaders =
             mapOf("Host" to host, "Connection" to "keep-alive", "User-Agent" to "Browser from Scratch") + headers
-        return Request(this, "GET", allHeaders)
+        return Request(this, method, allHeaders, body)
     }
 
 

@@ -147,3 +147,12 @@ Inspired by [browser.engineering](https://browser.engineering) by Pavel Panchekh
 - [x] 7-9: Cursor
 - [ ] 7-10: Multiple windows
 - [ ] 7-11: Clicks via the display list
+- [x] 8-1: Enter key
+- [ ] 8-2: GET forms
+- [x] 8-3: Blurring
+- [ ] 8-4: Check boxes
+- [ ] 8-5: Resubmit forms
+- [ ] 8-6: Message board
+- [ ] 8-7: Persistence
+- [ ] 8-8: Rich buttons
+- [ ] 8-9: HTML chrome

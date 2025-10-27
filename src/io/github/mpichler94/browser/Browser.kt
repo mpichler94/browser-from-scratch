@@ -22,6 +22,7 @@ class Browser(url: String) : JPanel() {
         }
     private val executor = Executors.newSingleThreadExecutor { Thread(it, "Worker") }
     private val chrome = Chrome(this)
+    private var focus: String? = null
 
     init {
         layout = null
@@ -34,11 +35,19 @@ class Browser(url: String) : JPanel() {
                     KeyEvent.VK_DOWN -> activeTab?.scrollDown()
                     KeyEvent.VK_UP -> activeTab?.scrollUp()
                     KeyEvent.VK_F5 -> activeTab?.reload()
-                    else -> chrome.keyPressed(it.keyCode)
+                    else -> {
+                        val consumed = chrome.keyPressed(it.keyCode)
+                        if (!consumed && focus == "content") {
+                            activeTab?.keyPressed(it.keyCode)
+                        }
+                    }
                 }
                 repaint()
             } else if (it.id == KeyEvent.KEY_TYPED && it.keyChar.code in 0x20..0x7e) {
-                chrome.keyTyped(it.keyChar)
+                val consumed = chrome.keyTyped(it.keyChar)
+                if (!consumed && focus == "content") {
+                    activeTab?.keyTyped(it.keyChar)
+                }
             }
             false
         }
@@ -46,8 +55,12 @@ class Browser(url: String) : JPanel() {
         addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
                 if (e.y < chrome.bottom) {
+                    activeTab?.blur()
                     chrome.mouseClicked(e.button, e.x, e.y)
+                    focus = null
                 } else {
+                    focus = "content"
+                    chrome.blur()
                     activeTab?.mouseClicked(e.button, e.x, e.y - chrome.bottom)
                 }
                 repaint()

@@ -116,9 +116,7 @@ internal class InlineLayout(
 
     private fun closeTag(tag: Element) {
         when (tag.tag) {
-            "p" -> {
-                newLine(tag)
-            }
+            "p" -> newLine(tag)
 
             "h1" -> {
                 newLine(tag)
@@ -141,12 +139,6 @@ internal class InlineLayout(
         val bgColor = node.style["background-color"]?.let { getColor(it) }
         if (bgColor != null) {
             cmds.add(DrawRect(x, y, x + width, y + height, bgColor))
-        }
-
-        if (node is Element) {
-            when {
-                node.tag == "li" -> cmds.add(DrawRect(x, y - 4 + height / 2, x + 8, y + 4 + height / 2, Color.black))
-            }
         }
 
         return cmds
@@ -179,6 +171,9 @@ internal class LineLayout(override val node: Token, val parent: InlineLayout, va
         val baseline = y + 1.25 * maxAscend
 
         for (word in children) {
+            if (node is Element && node.tag == "li") {
+                word.x = word.x + 15
+            }
             word.y = (baseline - word.lineMetrics.ascent).toInt()
         }
 
@@ -191,7 +186,12 @@ internal class LineLayout(override val node: Token, val parent: InlineLayout, va
         children.add(text)
     }
 
-    override fun paint(): List<Drawable> = emptyList()
+    override fun paint(): List<Drawable> {
+        if (node is Element && node.tag == "li") {
+            return listOf(DrawRect(x, y + height / 2 - 4, x + 8, y + height / 2 + 4, Color.black))
+        }
+        return emptyList()
+    }
 
     override fun toString(): String {
         return "Line { x=$x, y=$y, width=$width, height=$height }"
@@ -208,7 +208,6 @@ internal class TextLayout(
     private val frc = FontRenderContext(null, true, true)
     private lateinit var font: Font
     override var x: Int = 0
-        private set
     override var y: Int = 0
     override var width: Int = 0
         private set
@@ -247,7 +246,7 @@ internal class TextLayout(
 
 private data class FontKey(val font: String, val size: Int, val weight: Int, val style: Int)
 
-private fun getFont(cssStyle: Map<String, String>): Font {
+internal fun getFont(cssStyle: Map<String, String>): Font {
     val weight = when (cssStyle["font-weight"]) {
         "bold" -> Font.BOLD
         else -> Font.PLAIN

@@ -61,6 +61,7 @@ class Chrome(private val browser: Browser) {
         } else if (addressRect.contains(x, y)) {
             focus = "adress bar"
             addressBar = ""
+            cursorPos = 0
         } else {
             browser.tabs.indices
                 .firstOrNull { tabRect(it).contains(x, y) }
@@ -74,19 +75,23 @@ class Chrome(private val browser: Browser) {
         }
     }
 
-    fun keyTyped(key: Char) {
+    fun keyTyped(key: Char): Boolean {
         if (focus == "adress bar") {
             addressBar = addressBar.substring(0, cursorPos) + key + addressBar.substring(cursorPos)
             cursorPos++
+            return true
         }
+
+        return false
     }
 
-    fun keyPressed(keyCode: Int) {
+    fun keyPressed(keyCode: Int): Boolean {
         if (focus == "adress bar") {
             when (keyCode) {
                 KeyEvent.VK_ENTER -> {
                     browser.activeTab?.load(addressBar)
                     addressBar = ""
+                    cursorPos = 0
                     focus = null
                 }
 
@@ -97,13 +102,21 @@ class Chrome(private val browser: Browser) {
 
                 KeyEvent.VK_DELETE if (cursorPos < addressBar.length) -> {
                     addressBar = addressBar.removeRange(cursorPos, cursorPos + 1)
+                    cursorPos--
                 }
 
                 KeyEvent.VK_ESCAPE -> focus = null
                 KeyEvent.VK_LEFT -> cursorPos = (cursorPos - 1).coerceAtLeast(0)
                 KeyEvent.VK_RIGHT -> cursorPos = (cursorPos + 1).coerceAtMost(addressBar.length)
             }
+            return true
         }
+
+        return false
+    }
+
+    fun blur() {
+        focus = null
     }
 
     private fun tabRect(index: Int): Rectangle {

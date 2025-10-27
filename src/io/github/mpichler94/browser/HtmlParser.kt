@@ -195,22 +195,25 @@ sealed interface Token {
     val parent: Token?
     val children: MutableList<Token>
     val style: MutableMap<String, String>
+    var isFocused: Boolean
 }
 
-private data class Tag(val tag: String, val attributes: Map<String, String>)
+private data class Tag(val tag: String, val attributes: MutableMap<String, String>)
 
 data class Text(val text: String, override val parent: Token?) : Token {
     override val children = mutableListOf<Token>()
     override val style = mutableMapOf<String, String>()
+    override var isFocused = false
 
     override fun toString(): String {
         return text
     }
 }
 
-data class Element(val tag: String, val attributes: Map<String, String>, override val parent: Token?) : Token {
+data class Element(val tag: String, val attributes: MutableMap<String, String>, override val parent: Token?) : Token {
     override val children = mutableListOf<Token>()
     override val style = mutableMapOf<String, String>()
+    override var isFocused = false
 
     override fun toString(): String {
         val attrString = attributes.map {
