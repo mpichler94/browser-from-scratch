@@ -1,12 +1,14 @@
 package io.github.mpichler94.browser
 
 class HtmlParser(private val body: String) {
-    private val entities = mapOf("lt" to "<", "gt" to ">")
-    private val selfClosingTags = setOf(
-        "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"
-    )
-    private val headTags = setOf("base", "basefont", "bgsound", "noscript", "link", "meta", "title", "style", "script")
+    companion object {
+        internal val selfClosingTags = setOf(
+            "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"
+        )
+    }
 
+    private val entities = mapOf("lt" to "<", "gt" to ">")
+    private val headTags = setOf("base", "basefont", "bgsound", "noscript", "link", "meta", "title", "style", "script")
     private val unfinished = mutableListOf<Element>()
 
 
@@ -192,7 +194,7 @@ fun Token.treeToList(): List<Token> {
 }
 
 sealed interface Token {
-    val parent: Token?
+    var parent: Token?
     val children: MutableList<Token>
     val style: MutableMap<String, String>
     var isFocused: Boolean
@@ -200,7 +202,7 @@ sealed interface Token {
 
 private data class Tag(val tag: String, val attributes: MutableMap<String, String>)
 
-data class Text(val text: String, override val parent: Token?) : Token {
+class Text(val text: String, override var parent: Token?) : Token {
     override val children = mutableListOf<Token>()
     override val style = mutableMapOf<String, String>()
     override var isFocused = false
@@ -210,7 +212,7 @@ data class Text(val text: String, override val parent: Token?) : Token {
     }
 }
 
-data class Element(val tag: String, val attributes: MutableMap<String, String>, override val parent: Token?) : Token {
+class Element(val tag: String, val attributes: MutableMap<String, String>, override var parent: Token?) : Token {
     override val children = mutableListOf<Token>()
     override val style = mutableMapOf<String, String>()
     override var isFocused = false
@@ -225,4 +227,5 @@ data class Element(val tag: String, val attributes: MutableMap<String, String>, 
         }.joinToString(" ")
         return "<$tag${if (attrString.isBlank()) "" else " "}$attrString>"
     }
+
 }

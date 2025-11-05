@@ -9,7 +9,11 @@ import javax.swing.SwingUtilities
 fun main(args: Array<String>) {
     val frame = MainFrame()
 
-    val browser = Browser(args[0])
+    println("JVM Name: " + System.getProperty("java.vm.name"))
+    println("JVM Version: " + System.getProperty("java.version"))
+    println("Java Home: " + System.getProperty("java.home"))
+
+    val browser = Browser(if (args.isNotEmpty()) args[0] else "https://example.com")
     SwingUtilities.invokeLater {
         frame.add(browser, BorderLayout.CENTER)
         frame.revalidate()

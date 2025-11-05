@@ -61,6 +61,10 @@ class Server(private val port: Int = 8000) {
     ): Pair<String, String> {
         if (method == "GET" && url == "/") {
             return "200 OK" to showComments()
+        } else if (method == "GET" && url == "/comment.js") {
+         return "200 OK" to Server::class.java.getResource("/server/comment.js").readText()
+        } else if (method == "GET" && url.startsWith("/comment.css")) {
+            return "200 OK" to Server::class.java.getResource("/server/comment.css").readText()
         } else if (method == "POST" && url == "/add") {
             val params = formDecode(body)
             return "200 OK" to addEntry(params)
@@ -80,6 +84,9 @@ class Server(private val port: Int = 8000) {
             append("<p><input name=guest></p>")
             append("<p><button>Sign the book!</button></p>")
             append("</form>")
+            append("<strong></strong>")
+            append("<script src=/comment.js></script>")
+            append("<link rel=stylesheet href=/comment.css>")
         }
     }
 
@@ -96,7 +103,7 @@ class Server(private val port: Int = 8000) {
     }
 
     private fun addEntry(params: Map<String, String>): String {
-        if ("guest" in params) {
+        if ("guest" in params && params["guest"]!!.isNotBlank() && params["guest"]!!.length <= 100) {
             entries.add(params["guest"]!!)
         }
         return showComments()

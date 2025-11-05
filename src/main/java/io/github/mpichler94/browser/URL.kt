@@ -72,7 +72,17 @@ class URL(url: String) {
         if (tmpUrl.startsWith("//")) {
             return URL("$scheme:$tmpUrl")
         } else {
-            return URL("$scheme://$host:$port$tmpUrl")
+            if (scheme == "file") {
+                return URL("$scheme://$tmpUrl")
+            } else {
+                var portPart = ":$port"
+                if (scheme == "https" && port == 443) {
+                    portPart = ""
+                } else if (scheme == "http" && port == 80) {
+                    portPart = ""
+                }
+                return URL("$scheme://$host$portPart$tmpUrl")
+            }
         }
     }
 
@@ -104,6 +114,8 @@ class URL(url: String) {
         if (scheme == "https" && port == 443) {
             portPart = ""
         } else if (scheme == "http" && port == 80) {
+            portPart = ""
+        } else if (scheme == "file") {
             portPart = ""
         }
 

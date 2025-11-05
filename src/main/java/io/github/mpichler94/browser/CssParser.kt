@@ -136,7 +136,7 @@ class CssParser(private val s: String) {
         return out
     }
 
-    private fun selector(): Selector {
+    internal fun selector(): Selector {
         val name = word()
         return if (name.contains('.')) {
             ClassSelector(name)

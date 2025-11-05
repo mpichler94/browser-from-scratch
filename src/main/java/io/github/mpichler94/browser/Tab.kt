@@ -41,11 +41,13 @@ class Tab(private val browser: Browser) {
     private var historyIndex = -1
     private var scroll = 0
 
-    private var nodes: Token? = null
+    internal var nodes: Token? = null
+        private set
     private var document: Layout? = null
     private var displayList = emptyList<Drawable>()
     private var rules = listOf<Pair<Selector, Map<String, String>>>()
     private var focus: Element? = null
+    private var js: JsContext? = null
 
     val title: String
         get() {
@@ -92,6 +94,7 @@ class Tab(private val browser: Browser) {
             if (element is Text) {
                 // pass
             } else if (element is Element && element.tag == "a" && "href" in element.attributes) {
+                if (js?.dispatchEvent("click", element) == true) return
                 val href = element.attributes["href"]!!
                 val url = url?.resolve(href.substringBefore("#"))
                 val fragment = href.substringAfter("#", "")
@@ -102,10 +105,12 @@ class Tab(private val browser: Browser) {
                 }
                 return load(targetUrl)
             } else if (element is Element && element.tag == "input") {
+                if (js?.dispatchEvent("click", element) == true) return
                 element.attributes["value"] = ""
                 focus = element
                 element.isFocused = true
             } else if (element is Element && element.tag == "button") {
+                if (js?.dispatchEvent("click", element) == true) return
                 while (element != null) {
                     if (element is Element && element.tag == "form" && "action" in element.attributes) {
                         return submitForm(element)
@@ -134,6 +139,7 @@ class Tab(private val browser: Browser) {
 
     fun keyTyped(key: Char) {
         if (focus != null) {
+            if (js?.dispatchEvent("keydown", focus!!) == true) return
             focus!!.attributes["value"] = focus!!.attributes["value"] + key
             render()
         }
@@ -209,8 +215,21 @@ class Tab(private val browser: Browser) {
 
             for (link in links) {
                 val styleUrl = URL(parsedUrl).resolve(link)
-                val body = client.request(Request(styleUrl)).body
+                val body = getResponse(styleUrl.toString()).body
                 rules += CssParser(body).parse().toList()
+            }
+
+            val scripts = nodes!!.treeToList()
+                .filterIsInstance<Element>()
+                .filter { it.tag == "script" && "src" in it.attributes }
+                .map { it.attributes["src"]!! }
+
+            js = JsContext(this)
+            for (script in scripts) {
+                val scriptUrl = URL(parsedUrl).resolve(script)
+                val body = getResponse(scriptUrl.toString()).body
+
+                js?.run(body)
             }
 
             nodes!!.style()
@@ -269,7 +288,7 @@ class Tab(private val browser: Browser) {
         }
     }
 
-    private fun render() {
+    internal fun render() {
         nodes!!.style()
         layout()
     }
@@ -312,6 +331,8 @@ class Tab(private val browser: Browser) {
     }
 
     private fun submitForm(form: Element) {
+        if (js?.dispatchEvent("submit", form) == true) return
+
         val inputs = form.treeToList()
             .filterIsInstance<Element>()
             .filter { it.tag == "input" && "name" in it.attributes }

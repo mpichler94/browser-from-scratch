@@ -19,24 +19,25 @@ hood.
 
 ## Requirements
 
-- JDK 11 or later
+- GraalVM JDK 11 or later
 - Kotlin 1.9+
-- Amper (for building)
+- Maven (for building)
 
 ## Building
 
-This project uses [Amper](https://github.com/JetBrains/Amper) for build management.
+This project uses [Maven](https://maven.apache.org/) for build management.
 
 To build and run:
 
 ```bash
-./amper run
+./mvnw package
+java -jar target/browser-from-scratch-1.0-SNAPSHOT.jar https://example.com
 ```
 
 To run tests:
 
 ```bash
-./amper test
+./mvnw test
 ```
 
 ## Usage
@@ -44,38 +45,44 @@ To run tests:
 Run the browser with a URL as an argument:
 
 ```bash
-./amper run -- https://example.com
+java -jar target/browser-from-scratch-1.0-SNAPSHOT.jar https://example.com
 ```
 
 Or load a local file:
 
 ```bash
-./amper run -- file:///path/to/your/file.html
+java -jar target/browser-from-scratch-1.0-SNAPSHOT.jar file:///path/to/your/file.html
 ```
 
 For data URLs:
 
 ```bash
-./amper run -- "data:text/html,<html><body>Hello World</body></html>"
+java -jar target/browser-from-scratch-1.0-SNAPSHOT.jar "data:text/html,<html><body>Hello World</body></html>"
 ```
 
 To view source:
 
 ```bash
-./amper run -- view-source:https://example.com
+java -jar target/browser-from-scratch-1.0-SNAPSHOT.jar view-source:https://example.com
 ```
 
 ## Project Structure
 
-- `src/io/github/mpichler94/browser/`: Main source code
+- `src/io/github/mpichler94/`
+  - `browser/`: Browser implementation
+    - `layout/`: HTML layout processing
     - `main.kt`: Entry point
     - `Browser.kt`: Main browser logic
+    - `Chrome.kt`: Browser chrome (address bar, tabs, etc.)
+    - `CSSParser.kt`: CSS parser
+    - `Drawable.kt`: Everything that is drawn by the browser
+    - `HTMLParser.kt`: HTML parser
     - `HttpClient.kt`: HTTP client implementation
-    - `URL.kt`: URL parsing utilities
     - `Request.kt`: HTTP request handling
     - `Response.kt`: HTTP response handling
-- `test/`: Unit tests
-- `testResources/`: Test HTML files
+    - `Tab.kt`: Browser tab (handles web page logic)
+    - `URL.kt`: URL parsing utilities
+  - `server/`: Small HTTP server for testing
 
 ## Dependencies
 
@@ -84,6 +91,7 @@ To view source:
 - Kotlin Logging with Logback
 - AssertJ (for testing)
 - MockServer (for testing)
+- GraalVM Polyglot (for running JavaScript)
 
 ## License
 
@@ -156,3 +164,10 @@ Inspired by [browser.engineering](https://browser.engineering) by Pavel Panchekh
 - [ ] 8-7: Persistence
 - [ ] 8-8: Rich buttons
 - [ ] 8-9: HTML chrome
+- [x] 9-1: Node.children
+- [x] 9-2: createElement
+- [x] 9-3: removeChild
+- [x] 9-4: IDs
+- [x] 9-5: Event bubbling
+- [x] 9-6: Serializing HTML
+- [ ] 9-7: Script-added scripts and style sheets
