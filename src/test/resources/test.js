@@ -46,3 +46,11 @@ console.log(form.outerHTML)
 console.log(b2.innerHTML)
 
 console.log(form.innerHTML)
+
+document.cookie = "foo=bar; SameSite"
+
+console.log("Cookie:" + document.cookie)
+
+const x = new XMLHttpRequest()
+x.open("GET", "https://webbrowsertools.com/test-cors/", false)
+x.send()

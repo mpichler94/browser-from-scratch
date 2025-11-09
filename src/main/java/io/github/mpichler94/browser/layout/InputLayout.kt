@@ -23,7 +23,8 @@ internal class InputLayout(
     override var x: Int = 0
         private set
     override var y: Int = 0
-    override val width: Int = 200
+    override var width: Int = 200
+        private set
     override var height: Int = 0
         private set
     override val children: List<Layout> = emptyList()
@@ -40,11 +41,20 @@ internal class InputLayout(
             y = parent.y
         }
 
-        val lineMetrics = font.getLineMetrics("1", frc)
-        height = lineMetrics.height.toInt()
+        if (node.attributes["type"] == "hidden") {
+            width = 0
+            height = 0
+        } else {
+            val lineMetrics = font.getLineMetrics("1", frc)
+            height = lineMetrics.height.toInt()
+        }
     }
 
     override fun paint(): List<Drawable> {
+        if (node.attributes["type"] == "hidden") {
+            return emptyList()
+        }
+
         val cmds = mutableListOf<Drawable>()
 
         val bgColor = node.style["background-color"]?.let { getColor(it) }
@@ -53,7 +63,12 @@ internal class InputLayout(
         }
 
         val text = if (node.tag == "input") {
-            node.attributes["value"] ?: ""
+            val txt = node.attributes["value"] ?: ""
+            if (node.attributes["type"] == "password") {
+                "*".repeat(txt.length)
+            } else {
+                txt
+            }
         } else if (node.tag == "button") {
             if (node.children.size == 1 && node.children.first() is Text) {
                 (node.children.first() as Text).text

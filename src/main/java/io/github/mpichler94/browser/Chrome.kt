@@ -5,6 +5,7 @@ import java.awt.Font
 import java.awt.event.KeyEvent
 import java.awt.event.MouseEvent
 import java.awt.font.FontRenderContext
+import java.awt.font.TextAttribute
 
 class Chrome(private val browser: Browser) {
     private val frc = FontRenderContext(null, true, true)
@@ -172,8 +173,25 @@ class Chrome(private val browser: Browser) {
                 )
             )
         } else {
-            val url = browser.activeTab?.rawUrl ?: ""
-            cmds.add(DrawText(addressRect.left + padding, addressRect.top, url, font, Color.BLACK))
+            var x = addressRect.left + padding
+            var url = browser.activeTab?.decoratedUrl ?: ""
+
+            if (url.startsWith("Unsafe")) {
+                val boldFont = font.deriveFont(Font.BOLD)
+                cmds.add(DrawText(x, addressRect.top, "Unsafe", boldFont, Color.RED))
+                x += boldFont.getStringBounds("Unsafe ", frc).width.toInt()
+                url = url.replaceFirst("Unsafe", "").trim()
+                if ("https://" in url) {
+                    val attributes = font.attributes as MutableMap<TextAttribute, Any>
+                    attributes[TextAttribute.STRIKETHROUGH] = TextAttribute.STRIKETHROUGH_ON
+                    font.deriveFont(attributes)
+                    cmds.add(DrawText(x, addressRect.top, "https", font.deriveFont(attributes), Color.RED))
+                    x += font.getStringBounds("https", frc).width.toInt()
+                    url = url.replaceFirst("https", "").trim()
+                }
+            }
+
+            cmds.add(DrawText(x, addressRect.top, url, font, Color.BLACK))
         }
 
         return cmds

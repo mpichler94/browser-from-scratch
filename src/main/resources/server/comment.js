@@ -20,3 +20,5 @@ form.addEventListener("submit", function(e) {
     console.log("Handle submit");
     if (!allowSubmit) e.preventDefault();
 });
+
+console.log("Cookie:" + document.cookie)

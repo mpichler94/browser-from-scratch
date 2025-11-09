@@ -11,6 +11,10 @@ import java.awt.event.MouseEvent
 import java.util.concurrent.Executors
 import javax.swing.JFrame
 import javax.swing.JPanel
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.text.contains
+import kotlin.text.split
 
 class Browser(url: String) : JPanel() {
     val tabs = mutableListOf<Tab>()
@@ -133,3 +137,23 @@ class Browser(url: String) : JPanel() {
         parent?.title = activeTab?.title ?: "Browser"
     }
 }
+
+internal fun URL.createRequest(
+    method: String = "GET",
+    referrer: URL? = null,
+    body: String? = null
+): Request {
+    val additionalHeaders = mutableMapOf("Host" to host, "Connection" to "keep-alive", "User-Agent" to "Browser from Scratch")
+    val cookie = HttpClient.instance.getCookie(this)
+    if (cookie != null) {
+        var allowCookie = true
+        if (referrer != null && cookie.parameters["samesite"] == "lax" && method != "GET") {
+            allowCookie = host == referrer.host
+        }
+        if (allowCookie) {
+            additionalHeaders["Cookie"] = cookie.value
+        }
+    }
+    return Request(this, method, additionalHeaders, body)
+}
+

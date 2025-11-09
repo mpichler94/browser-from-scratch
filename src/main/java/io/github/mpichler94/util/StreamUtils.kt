@@ -10,7 +10,7 @@ internal fun InputStream.readLine(): String {
     while (true) {
         val b = read()
         if (b == -1) {
-            return buffer.decodeToString()
+            return buffer.decodeToString(endIndex = index)
         }
         if (index >= buffer.size) {
             buffer = buffer.copyOf(buffer.size * 2)

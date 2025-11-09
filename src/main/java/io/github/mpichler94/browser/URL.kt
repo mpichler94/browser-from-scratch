@@ -86,6 +86,8 @@ class URL(url: String) {
         }
     }
 
+    val origin: String get() = "$scheme://$host:$port"
+
     fun withPath(path: String): URL = URL("$scheme://$host:$port$path")
 
     override fun equals(other: Any?): Boolean {

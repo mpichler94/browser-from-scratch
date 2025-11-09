@@ -7,8 +7,7 @@ class CssParser(private val s: String) {
 
     private var i = 0
 
-    fun parse(): Map<Selector, Map<String, String>> {
-        val rules = mutableMapOf<Selector, Map<String, String>>()
+    fun parse(): Map<Selector, Map<String, String>> = buildMap {
         while (i < s.length) {
             try {
                 whitespace()
@@ -17,7 +16,7 @@ class CssParser(private val s: String) {
                 whitespace()
                 val body = body()
                 literal('}')
-                rules[selector] = body
+                put(selector, body)
             } catch (e: Exception) {
                 logger.debug(e) { "Error parsing CSS: ${e.message}" }
                 val why = ignoreUntil('}')
@@ -27,31 +26,28 @@ class CssParser(private val s: String) {
                 }
             }
         }
-        return rules
     }
 
-    fun body(): Map<String, String> {
-        val pairs = mutableMapOf<String, String>()
-        while (i < s.length && s[i] != '}') {
-            try {
-                val (prop, value) = pair()
-                pairs[prop] = value
-                whitespace()
-                literal(';')
-                whitespace()
-            } catch (e: Exception) {
-                logger.debug(e) { "Error parsing CSS: ${e.message}" }
-                val why = ignoreUntil(';', '}')
-                if (why == ';') {
-                    literal(';')
-                    whitespace()
-                } else {
-                    break
-                }
-            }
-        }
-        return pairs
-    }
+    fun body(): Map<String, String> = buildMap {
+         while (i < s.length && s[i] != '}') {
+             try {
+                 val (prop, value) = pair()
+                 put(prop, value)
+                 whitespace()
+                 literal(';')
+                 whitespace()
+             } catch (e: Exception) {
+                 logger.debug(e) { "Error parsing CSS: ${e.message}" }
+                 val why = ignoreUntil(';', '}')
+                 if (why == ';') {
+                     literal(';')
+                     whitespace()
+                 } else {
+                     break
+                 }
+             }
+         }
+     }
 
     private fun whitespace() {
         while (i < s.length && s[i].isWhitespace()) {

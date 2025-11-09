@@ -133,15 +133,11 @@ internal class InlineLayout(
         return nodes.flatMap { paintNode(it) }
     }
 
-    private fun paintNode(node: Token): List<Drawable> {
-        val cmds = mutableListOf<Drawable>()
-
+    private fun paintNode(node: Token): List<Drawable> = buildList {
         val bgColor = node.style["background-color"]?.let { getColor(it) }
         if (bgColor != null) {
-            cmds.add(DrawRect(x, y, x + width, y + height, bgColor))
+            add(DrawRect(x, y, x + width, y + height, bgColor))
         }
-
-        return cmds
     }
 
     override fun toString(): String {

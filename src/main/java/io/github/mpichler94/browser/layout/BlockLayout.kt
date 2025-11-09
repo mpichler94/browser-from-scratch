@@ -34,7 +34,7 @@ internal class BlockLayout(
         marker?.let { inline.add(it) }
 
         for (child in node.children) {
-            if (child is Element && child.tag == "head") {
+            if (child is Element && child.tag in listOf("head", "style", "script")) {
                 continue
             }
 

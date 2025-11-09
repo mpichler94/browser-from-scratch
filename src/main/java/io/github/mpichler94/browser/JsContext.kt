@@ -3,8 +3,6 @@ package io.github.mpichler94.browser
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.graalvm.polyglot.Context
 import org.graalvm.polyglot.HostAccess
-import org.graalvm.polyglot.SandboxPolicy
-import org.graalvm.polyglot.TypeLiteral
 import org.graalvm.polyglot.Value
 import java.io.OutputStream
 
@@ -91,6 +89,26 @@ class JsContext(private val tab: Tab) {
             val elt = Element(tag, mutableMapOf(), null)
             val handle = elt.getHandle()
             return handle
+        }
+
+        @HostAccess.Export
+        fun getCookie(): String {
+            val url = tab.url ?: return ""
+            val cookie = HttpClient.instance.getCookie(url) ?: return ""
+            if ("httponly" in cookie.parameters) {
+                return ""
+            }
+            return cookie.toString()
+        }
+
+        @HostAccess.Export
+        fun setCookie(value: String) {
+            val url = tab.url ?: return
+            val cookie = HttpClient.instance.getCookie(url)
+            if (cookie != null && "httponly" in cookie.parameters) {
+                return
+            }
+            HttpClient.instance.setCookie(url, Cookie.parse(value))
         }
 
         @HostAccess.Export
@@ -186,6 +204,26 @@ class JsContext(private val tab: Tab) {
                 ?.filterIsInstance<Element>()
                 ?.filter { "id" in it.attributes}
                 ?.associate { it.attributes["id"]!! to it.getHandle() } ?: emptyMap()
+        }
+
+        @HostAccess.Export
+        fun sendXMLHttpRequest(method: String, url: String, body: String?): String? {
+            val fullUrl = tab.url?.resolve(url) ?: return null
+
+            val request = fullUrl.createRequest(method, tab.url, body)
+            val response = HttpClient.instance.request(request)
+
+            if (fullUrl.origin != tab.url?.origin) {
+                if ("access-control-allow-origin" in response.headers) {
+                    val allowedOrigin = response.headers["access-control-allow-origin"]!!
+                    if (allowedOrigin == "*" || allowedOrigin == tab.url?.origin) {
+                        return response.body
+                    }
+                }
+                throw IllegalArgumentException("Cross-origin XHR request not allowed")
+            }
+
+            return response.body
         }
     }
 }

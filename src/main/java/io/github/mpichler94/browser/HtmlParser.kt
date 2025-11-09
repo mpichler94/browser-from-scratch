@@ -129,16 +129,17 @@ class HtmlParser(private val body: String) {
     private fun getAttributes(text: String): Tag {
         val parts = text.split(' ', '\n', '\t', '\r')
         val tag = parts[0].lowercase().trim()
-        val attributes = mutableMapOf<String, String>()
-        for (pair in parts.subList(1, parts.size)) {
-            if (pair.contains('=')) {
-                val (key, value) = pair.split('=', limit = 2)
-                attributes[key.lowercase().trim()] = value.trim().trim('"', '\'')
-            } else {
-                attributes[pair.lowercase().trim()] = ""
+        val attributes = buildMap {
+            for (pair in parts.subList(1, parts.size)) {
+                if (pair.contains('=')) {
+                    val (key, value) = pair.split('=', limit = 2)
+                    put(key.lowercase().trim(), value.trim().trim('"', '\''))
+                } else {
+                    put(pair.lowercase().trim(), "")
+                }
             }
         }
-        return Tag(tag, attributes)
+        return Tag(tag, attributes.toMutableMap())
     }
 
     private fun implicitTags(tag: String? = null) {

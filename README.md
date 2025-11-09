@@ -171,3 +171,9 @@ Inspired by [browser.engineering](https://browser.engineering) by Pavel Panchekh
 - [x] 9-5: Event bubbling
 - [x] 9-6: Serializing HTML
 - [ ] 9-7: Script-added scripts and style sheets
+- [x] 10-1: New inputs
+- [x] 10-2: Certificate errors
+- [x] 10-3: Script access
+- [x] 10-4: Cookie expiration
+- [x] 10-5: Cross-origin resource sharing (CORS)
+- [ ] 10-6: Referrer

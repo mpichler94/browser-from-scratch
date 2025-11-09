@@ -7,6 +7,14 @@ document = {
   createElement(tagName) {
     const handle = __document.createElement(tagName)
     return new Node(handle)
+  },
+
+  get cookie() {
+    return __document.getCookie()
+  },
+
+  set cookie(value) {
+    __document.setCookie(value)
   }
 }
 
@@ -91,6 +99,22 @@ const ids = __document.getIDs()
 for (let id in ids) {
   globalThis[id] = new Node(ids[id])
   window[id] = this[id]
+}
+
+class XMLHttpRequest {
+  constructor() {
+
+  }
+
+  open(method, url, is_async) {
+    if (is_async) throw Error("Asynchronous XHR is not supported")
+    this.method = method
+    this.url = url
+  }
+
+  send(body) {
+    this.responseText = __document.sendXMLHttpRequest(this.method, this.url, body)
+  }
 }
 
 console.log("Runtime.js loaded")

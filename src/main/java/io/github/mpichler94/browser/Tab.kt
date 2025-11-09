@@ -11,13 +11,11 @@ import java.awt.event.KeyEvent
 import java.awt.event.MouseEvent
 import java.io.File
 import java.net.URLEncoder
-import java.time.Instant
 
 class Tab(private val browser: Browser) {
     private val logger = KotlinLogging.logger {}
-    private val client = HttpClient()
-    private val cache: LinkedHashMap<URL, CachedResponse> = LinkedHashMap(1000, 0.75f)
-    private val maxAgePattern = Regex("""max-age=(\d+)""")
+    private val client = HttpClient.instance
+
     private val defaultStyleSheet: Map<Selector, Map<String, String>> =
         CssParser(Tab::class.java.getResource("/browser.css")!!.readText()).parse()
     private val inheritedProperties =
@@ -34,9 +32,11 @@ class Tab(private val browser: Browser) {
     private val scrollStep = 10
     private val vStep = 50
 
-    var rawUrl = "about:blank"
+    private var rawUrl = "about:blank"
+    internal var url: URL? = null
         private set
-    private var url: URL? = null
+    internal var decoratedUrl: String = ""
+        private set
     private var history = mutableListOf<String>()
     private var historyIndex = -1
     private var scroll = 0
@@ -48,6 +48,7 @@ class Tab(private val browser: Browser) {
     private var rules = listOf<Pair<Selector, Map<String, String>>>()
     private var focus: Element? = null
     private var js: JsContext? = null
+    private val allowedOrigins: MutableSet<String> = mutableSetOf()
 
     val title: String
         get() {
@@ -98,7 +99,11 @@ class Tab(private val browser: Browser) {
                 val href = element.attributes["href"]!!
                 val url = url?.resolve(href.substringBefore("#"))
                 val fragment = href.substringAfter("#", "")
-                val targetUrl = "${(url?.toString() ?: "")}#$fragment"
+                val targetUrl = if (fragment.isNotBlank()) {
+                    "${(url?.toString() ?: "")}#$fragment"
+                } else {
+                    (url?.toString() ?: "")
+                }
 
                 if (button == MouseEvent.BUTTON2) {
                     return browser.newTab(targetUrl)
@@ -186,16 +191,32 @@ class Tab(private val browser: Browser) {
     private fun doLoad(body: String? = null) {
         val url = history[historyIndex]
         val showSource = url.startsWith("view-source:")
-        this.rawUrl = url
+        rawUrl = url
+        decoratedUrl = url
         val parsedUrl = url.substringAfter("view-source:").substringBefore("#")
         val fragment = url.substringAfter("#", "")
+        allowedOrigins.clear()
 
         val response = try {
             this.url = URL(parsedUrl)
+            if (this.url?.scheme == "https") {
+                decoratedUrl = "\uD83D\uDD12 $url"
+            }
             getResponse(parsedUrl, body)
         } catch (e: Throwable) {
             this.url = null
-            Response(200, mapOf(), "")
+            decoratedUrl = "Unsafe $url"
+            Response(200, mapOf(), "<h1>Certificate invalid</h1>")
+        }
+
+        if("content-security-policy" in response.headers) {
+            val csp = response.headers["content-security-policy"]!!.split(' ')
+            if (csp.isNotEmpty() && csp.first() == "default-src") {
+                allowedOrigins.clear()
+                for (origin in csp.drop(1)) {
+                    allowedOrigins.add(URL(origin).origin)
+                }
+            }
         }
 
         if (showSource) {
@@ -247,34 +268,29 @@ class Tab(private val browser: Browser) {
     private fun getResponse(url: String, body: String? = null): Response {
         val parsedUrl = URL(url)
 
+        if (allowedOrigins.isNotEmpty() && parsedUrl.origin !in allowedOrigins) {
+            logger.warn { "Blocked request $url due to CSP" }
+            return Response(403, mapOf(), "")
+        }
+
         return if (parsedUrl.scheme == "data") {
             Response(body = url.substringAfter(","))
         } else if (parsedUrl.scheme == "file") {
             Response(body = File(parsedUrl.path).readText())
         } else {
-            if (body == null && parsedUrl in cache && cache[parsedUrl]!!.validUntil > Instant.now()) {
-                cache[parsedUrl]!!.response
-            } else {
+            try {
                 val response = if (body != null) {
-                    client.request(parsedUrl.createRequest("POST", body = body))
+                    client.request(parsedUrl.createRequest("POST", this.url, body))
                 } else {
-                    client.request(parsedUrl.createRequest())
-                }
-                if (response.headers["cache-control"]?.contains("max-age") == true) {
-                    val maxAge = maxAgePattern.find(response.headers["cache-control"]!!)?.groupValues[1]?.toInt() ?: 0
-                    cache[parsedUrl] = CachedResponse(
-                        Instant.now().plusSeconds(maxAge.toLong()),
-                        response
-                    )
-
-                    // TODO: more sophisticated cache eviction
-                    if (cache.size > 740) {
-                        cache.remove(cache.keys.first())
-                    }
+                    client.request(parsedUrl.createRequest(referrer = this.url))
                 }
                 response
+            } catch (e: Throwable) {
+                logger.error(e) { "Error while requesting $url" }
+                Response(444, body = "")
             }
-        }
+            }
+
     }
 
     private fun layout() {
@@ -346,18 +362,6 @@ class Tab(private val browser: Browser) {
         load(url.toString(), body)
     }
 
-
-    private fun URL.createRequest(
-        method: String = "GET",
-        headers: Map<String, String> = mapOf(),
-        body: String? = null
-    ): Request {
-        val allHeaders =
-            mapOf("Host" to host, "Connection" to "keep-alive", "User-Agent" to "Browser from Scratch") + headers
-        return Request(this, method, allHeaders, body)
-    }
-
-
     private fun showSource(body: String) {
         println(body)
     }
@@ -410,4 +414,3 @@ class Tab(private val browser: Browser) {
     }
 }
 
-private data class CachedResponse(val validUntil: Instant, val response: Response)
