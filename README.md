@@ -177,3 +177,8 @@ Inspired by [browser.engineering](https://browser.engineering) by Pavel Panchekh
 - [x] 10-4: Cookie expiration
 - [x] 10-5: Cross-origin resource sharing (CORS)
 - [ ] 10-6: Referrer
+- [x] 11-1: Filters (blur)
+- [x] 11-2: Hit testing
+- [x] 11-3: Interest region 
+- [ ] 11-4: Overflow scrolling
+- [ ] 11-5: Touch input

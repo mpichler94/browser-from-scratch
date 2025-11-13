@@ -16,6 +16,7 @@
         <kotlin.version>2.2.21</kotlin.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
         <graaljs.version>25.0.1</graaljs.version>
+        <lwjgl.version>3.3.6</lwjgl.version>
     </properties>
 
     <dependencyManagement>
@@ -67,6 +68,17 @@
             <artifactId>commons-text</artifactId>
             <version>1.14.0</version>
         </dependency>
+        <dependency>
+            <groupId>io.github.humbleui</groupId>
+            <artifactId>jwm</artifactId>
+            <version>0.4.20</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.humbleui</groupId>
+            <artifactId>skija-windows-x64</artifactId>
+            <version>0.143.0</version>
+        </dependency>
+
 
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
@@ -127,7 +139,7 @@
                         <configuration>
                             <sourceDirs>
                                 <sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
-                                <sourceDir>${project.basedir}/src/main/java</sourceDir>
+                                <sourceDir>src/main/kotlin</sourceDir>
                             </sourceDirs>
                         </configuration>
                     </execution>
@@ -169,7 +181,6 @@
                 <artifactId>spotless-maven-plugin</artifactId>
                 <version>3.0.0</version>
                 <configuration>
-                    <ratchetFrom>origin/main</ratchetFrom>
                     <formats>
                         <format>
                             <!-- define the files to apply to -->
@@ -193,6 +204,13 @@
                         </ktlint>
                     </kotlin>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
 

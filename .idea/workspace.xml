@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="087cc82a-2d80-4c1e-a7b5-8841c3fbe2c2" name="Changes" comment="feat: implement chapter 10 - security">
+      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/git_toolbox_prj.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/kotlinc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Permanent_Script_Dependencies.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/Browser.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/Drawable.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/layout/Layout.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/main.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/Browser.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/Chrome.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/Chrome.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/CssParser.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/CssParser.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/Drawable.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/HtmlParser.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/HtmlParser.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/HttpClient.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/HttpClient.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/JsContext.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/JsContext.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/Request.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/Request.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/Response.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/Response.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/Tab.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/Tab.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/URL.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/URL.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/layout/BlockLayout.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/layout/BlockLayout.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/layout/InlineLayout.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/layout/InlineLayout.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/layout/InputLayout.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/layout/InputLayout.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/layout/Layout.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/main.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/server/Server.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/server/Server.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/server/main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/server/main.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/util/StreamUtils.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/util/StreamUtils.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/io/github/mpichler94/browser/BrowserTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/io/github/mpichler94/browser/BrowserTest.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/io/github/mpichler94/browser/CssParserTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/io/github/mpichler94/browser/CssParserTest.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/io/github/mpichler94/browser/HtmlParserTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/io/github/mpichler94/browser/HtmlParserTest.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/io/github/mpichler94/browser/HttpClientTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/io/github/mpichler94/browser/HttpClientTest.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/io/github/mpichler94/browser/URLTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/io/github/mpichler94/browser/URLTest.kt" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="60" />
+    <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Kotlin Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;mpichler94&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;git@github.com:mpichler94/browser-from-scratch.git&quot;,
+    &quot;accountId&quot;: &quot;6793930c-0f67-452b-8a44-622cb2725fcf&quot;
+  }
+}</component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="jar://$MAVEN_REPOSITORY$/io/github/humbleui/jwm/0.4.20/jwm-0.4.20-sources.jar!/io/github/humbleui/jwm/EventWindowResize.java" root0="SKIP_INSPECTION" />
+    <setting file="jar://$MAVEN_REPOSITORY$/io/github/humbleui/jwm/0.4.20/jwm-0.4.20-sources.jar!/io/github/humbleui/jwm/EventWindowScreenChange.java" root0="SKIP_INSPECTION" />
+    <setting file="jar://$MAVEN_REPOSITORY$/io/github/humbleui/skija-shared/0.143.0/skija-shared-0.143.0-sources.jar!/io/github/humbleui/skija/Canvas.java" root0="SKIP_INSPECTION" />
+    <setting file="jar://$MAVEN_REPOSITORY$/io/github/humbleui/skija-shared/0.143.0/skija-shared-0.143.0-sources.jar!/io/github/humbleui/skija/Color.java" root0="SKIP_INSPECTION" />
+    <setting file="jar://$MAVEN_REPOSITORY$/io/github/humbleui/skija-shared/0.143.0/skija-shared-0.143.0-sources.jar!/io/github/humbleui/skija/FontMgr.java" root0="SKIP_INSPECTION" />
+    <setting file="jar://$MAVEN_REPOSITORY$/io/github/humbleui/skija-shared/0.143.0/skija-shared-0.143.0-sources.jar!/io/github/humbleui/skija/FontStyle.java" root0="SKIP_INSPECTION" />
+    <setting file="jar://$MAVEN_REPOSITORY$/io/github/humbleui/skija-shared/0.143.0/skija-shared-0.143.0-sources.jar!/io/github/humbleui/skija/FontVariation.java" root0="SKIP_INSPECTION" />
+    <setting file="jar://$MAVEN_REPOSITORY$/io/github/humbleui/skija-shared/0.143.0/skija-shared-0.143.0-sources.jar!/io/github/humbleui/skija/FourByteTag.java" root0="SKIP_INSPECTION" />
+    <setting file="jar://$MAVEN_REPOSITORY$/io/github/humbleui/skija-shared/0.143.0/skija-shared-0.143.0-sources.jar!/io/github/humbleui/skija/Paint.java" root0="SKIP_INSPECTION" />
+    <setting file="jar://$MAVEN_REPOSITORY$/io/github/humbleui/skija-shared/0.143.0/skija-shared-0.143.0-sources.jar!/io/github/humbleui/skija/SurfaceProps.java" root0="SKIP_INSPECTION" />
+    <setting file="jar://$MAVEN_REPOSITORY$/io/github/humbleui/skija-shared/0.143.0/skija-shared-0.143.0-sources.jar!/io/github/humbleui/skija/Typeface.java" root0="SKIP_INSPECTION" />
+    <setting file="jar://$MAVEN_REPOSITORY$/io/github/humbleui/skija-shared/0.143.0/skija-shared-0.143.0-sources.jar!/io/github/humbleui/skija/paragraph/TextStyle.java" root0="SKIP_INSPECTION" />
+    <setting file="jar://$MAVEN_REPOSITORY$/io/github/humbleui/skija-shared/0.143.0/skija-shared-0.143.0.jar!/io/github/humbleui/skija/Canvas.class" root0="SKIP_INSPECTION" />
+    <setting file="jar://$MAVEN_REPOSITORY$/io/github/humbleui/types/0.1.1/types-0.1.1.jar!/io/github/humbleui/types/IRect.class" root0="SKIP_INSPECTION" />
+    <setting file="jar://$MAVEN_REPOSITORY$/io/github/humbleui/types/0.1.1/types-0.1.1.jar!/io/github/humbleui/types/Rect.class" root0="SKIP_INSPECTION" />
+    <setting file="jar://$MAVEN_REPOSITORY$/org/graalvm/polyglot/polyglot/25.0.1/polyglot-25.0.1-sources.jar!/org/graalvm/polyglot/Context.java" root0="SKIP_INSPECTION" />
+    <setting file="jar://$MAVEN_REPOSITORY$/org/graalvm/polyglot/polyglot/25.0.1/polyglot-25.0.1-sources.jar!/org/graalvm/polyglot/impl/AbstractPolyglotImpl.java" root0="SKIP_INSPECTION" />
+    <setting file="jar://$MAVEN_REPOSITORY$/org/jetbrains/kotlin/kotlin-stdlib/2.2.21/kotlin-stdlib-2.2.21-sources.jar!/commonMain/generated/_Arrays.kt" root0="SKIP_INSPECTION" />
+    <setting file="jar://$MAVEN_REPOSITORY$/org/jetbrains/kotlin/kotlin-stdlib/2.2.21/kotlin-stdlib-2.2.21-sources.jar!/commonMain/kotlin/util/Tuples.kt" root0="SKIP_INSPECTION" />
+    <setting file="jar://$MAVEN_REPOSITORY$/org/jetbrains/kotlin/kotlin-stdlib/2.2.21/kotlin-stdlib-2.2.21-sources.jar!/jvmMain/kotlin/Any.kt" root0="SKIP_INSPECTION" />
+    <setting file="jar://$MAVEN_REPOSITORY$/org/jetbrains/kotlin/kotlin-stdlib/2.2.21/kotlin-stdlib-2.2.21-sources.jar!/jvmMain/kotlin/Collections.kt" root0="SKIP_INSPECTION" />
+  </component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHomeTypeForPersistence" value="WRAPPER" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 5
+}</component>
+  <component name="ProjectId" id="34hyY4cxQCC7InkjPSc1KjggI4Z" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.Guestbook.executor": "Debug",
+    "Application.Server.executor": "Run",
+    "Application.chapter 8.executor": "Run",
+    "Application.example.executor": "Run",
+    "Application.local example 5.executor": "Run",
+    "Application.rounded.executor": "Debug",
+    "Maven.browser-from-scratch [com.diffplug.spotless:spotless-maven-plugin:3.0.0:apply].executor": "Run",
+    "Maven.browser-from-scratch [com.diffplug.spotless:spotless-maven-plugin:3.0.0:check].executor": "Run",
+    "Maven.browser-from-scratch [compile].executor": "Run",
+    "Maven.browser-from-scratch [install].executor": "Run",
+    "Maven.browser-from-scratch [spotless:apply].executor": "Run",
+    "Maven.browser-from-scratch [verify].executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.restore.workspace.module": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "SONARLINT_PRECOMMIT_ANALYSIS": "true",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultAutoModeForALLUsers.v1": "true",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "junie.onboarding.icon.badge.shown": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "O:/01_git",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.29481733",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="K2MoveDeclarationsDialog.RECENT_PACKAGE_KEY">
+      <recent name="io.github.mpichler94.browser" />
+    </key>
+  </component>
+  <component name="RunAnythingCache">
+    <option name="myCommands">
+      <command value="mvn compile" />
+      <command value="mvn spotless:apply" />
+    </option>
+  </component>
+  <component name="RunManager" selected="Application.rounded">
+    <configuration name="Guestbook" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="io.github.mpichler94.browser.MainKt" />
+      <module name="browser-from-scratch" />
+      <option name="PROGRAM_PARAMETERS" value="http://localhost:8000" />
+      <option name="VM_PARAMETERS" value="-XX:+HeapDumpOnOutOfMemoryError" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Server" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="io.github.mpichler94.server.MainKt" />
+      <module name="browser-from-scratch" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="chapter 8" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="io.github.mpichler94.browser.MainKt" />
+      <module name="browser-from-scratch" />
+      <option name="PROGRAM_PARAMETERS" value="https://browser.engineering/scripts.html#running-javascript-code" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="example" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="io.github.mpichler94.browser.MainKt" />
+      <module name="browser-from-scratch" />
+      <option name="PROGRAM_PARAMETERS" value="https://example.com" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="local example 5" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="io.github.mpichler94.browser.MainKt" />
+      <module name="browser-from-scratch" />
+      <option name="PROGRAM_PARAMETERS" value="file://$PROJECT_DIR$/src/test/resources/example5-scripts.html" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="rounded" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="io.github.mpichler94.browser.MainKt" />
+      <module name="browser-from-scratch" />
+      <option name="PROGRAM_PARAMETERS" value="https://browser.engineering/examples/example11-rounded-background.html" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="Application.example" />
+      <item itemvalue="Application.chapter 8" />
+      <item itemvalue="Application.rounded" />
+      <item itemvalue="Application.local example 5" />
+      <item itemvalue="Application.Server" />
+      <item itemvalue="Application.Guestbook" />
+    </list>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-cffe25b9f5b3-intellij.indexing.shared.core-IU-253.28086.51" />
+        <option value="bundled-js-predefined-d6986cc7102b-c7e53b3be11b-JavaScript-IU-253.28086.51" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="087cc82a-2d80-4c1e-a7b5-8841c3fbe2c2" name="Changes" comment="" />
+      <created>1761680143317</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1761680143317</updated>
+      <workItem from="1761680145648" duration="2758000" />
+      <workItem from="1761757668867" duration="7330000" />
+      <workItem from="1761843995082" duration="9291000" />
+      <workItem from="1761925431163" duration="2652000" />
+      <workItem from="1761981132658" duration="6112000" />
+      <workItem from="1762069229148" duration="7563000" />
+      <workItem from="1762112808963" duration="3275000" />
+      <workItem from="1762194509317" duration="7025000" />
+      <workItem from="1762282302996" duration="3185000" />
+      <workItem from="1762363278771" duration="8958000" />
+      <workItem from="1762448805923" duration="9689000" />
+      <workItem from="1762526427353" duration="9319000" />
+      <workItem from="1762585965056" duration="12228000" />
+      <workItem from="1762673660077" duration="11894000" />
+      <workItem from="1762793000675" duration="6351000" />
+      <workItem from="1762882301384" duration="10590000" />
+      <workItem from="1762967150040" duration="6781000" />
+      <workItem from="1763052578871" duration="164000" />
+      <workItem from="1763052819129" duration="7325000" />
+    </task>
+    <task id="LOCAL-00001" summary="feat: implement chapter 9 - scripts&#10;&#10;also do major refactoring&#10;replace amper as build tool with maven">
+      <option name="closed" value="true" />
+      <created>1762372658220</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1762372658220</updated>
+    </task>
+    <task id="LOCAL-00002" summary="feat: implement chapter 9 - scripts&#10;&#10;also do major refactoring&#10;replace amper as build tool with maven">
+      <option name="closed" value="true" />
+      <created>1762374508206</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1762374508206</updated>
+    </task>
+    <task id="LOCAL-00003" summary="feat: implement chapter 9 - scripts&#10;&#10;also do major refactoring&#10;replace amper as build tool with maven">
+      <option name="closed" value="true" />
+      <created>1762374925359</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1762374925359</updated>
+    </task>
+    <task id="LOCAL-00004" summary="feat: implement chapter 9 - scripts&#10;&#10;also do major refactoring&#10;replace amper as build tool with maven">
+      <option name="closed" value="true" />
+      <created>1762375401187</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1762375401187</updated>
+    </task>
+    <task id="LOCAL-00005" summary="feat: implement chapter 10 - security">
+      <option name="closed" value="true" />
+      <created>1762728864524</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1762728864524</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="feat: implement chapter 9 - scripts&#10;&#10;also do major refactoring&#10;replace amper as build tool with maven" />
+    <MESSAGE value="feat: implement chapter 10 - security" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: implement chapter 10 - security" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="kotlin-line">
+          <url>file://$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/JsContext.kt</url>
+          <line>84</line>
+          <properties>
+            <option name="lambda-ordinal" value="-1" />
+          </properties>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="kotlin-line">
+          <url>file://$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/server/Server.kt</url>
+          <line>177</line>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="kotlin-line">
+          <url>file://$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/Tab.kt</url>
+          <line>215</line>
+          <option name="timeStamp" value="9" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="kotlin-line">
+          <url>file://$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/Browser.kt</url>
+          <line>73</line>
+          <option name="timeStamp" value="23" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="kotlin-line">
+          <url>file://$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/layout/InlineLayout.kt</url>
+          <line>144</line>
+          <option name="timeStamp" value="28" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="Application">
+        <watch expression="(0..186).map { FontMgr.getDefault().getFamilyName(it) }.sortedBy { it }.joinToString(&quot;\n&quot;)" language="kotlin" />
+      </configuration>
+    </watches-manager>
+  </component>
+</project>
