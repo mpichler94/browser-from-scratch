@@ -1,5 +1,6 @@
 package io.github.mpichler94.browser
 
+import io.github.humbleui.jwm.App
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockserver.integration.ClientAndServer
@@ -39,30 +40,30 @@ class BrowserTest {
 
     @Test
     fun `should load example page`() {
-        Browser("http://www.example.com/index.html")
+        Browser(App.makeWindow(), "http://www.example.com/index.html")
     }
 
     @Test
     fun `should load simple sample`() {
         val url = "http://localhost:8080/example1-simple.html"
-        val browser = Browser(url)
+        val browser = Browser(App.makeWindow(), url)
     }
 
     @Test
     fun `should load simple sample from file`() {
         val url = "file://testResources/example1-simple.html"
-        Browser(url)
+        Browser(App.makeWindow(), url)
     }
 
     @Test
     fun `should load data url`() {
         val url = "data:text/html,Hello world!"
-        Browser(url)
+        Browser(App.makeWindow(), url)
     }
 
     @Test
     fun `should show source with view-source`() {
         val url = "view-source:file://testResources/example1-simple.html"
-        Browser(url)
+        Browser(App.makeWindow(), url)
     }
 }

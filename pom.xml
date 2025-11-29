@@ -17,6 +17,7 @@
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
         <graaljs.version>25.0.1</graaljs.version>
         <lwjgl.version>3.3.6</lwjgl.version>
+        <kotlin.compiler.jvmTarget>24</kotlin.compiler.jvmTarget>
     </properties>
 
     <dependencyManagement>

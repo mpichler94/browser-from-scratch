@@ -19,8 +19,43 @@ document = {
 }
 
 window = {}
-
 LISTENERS = {}
+SET_TIMEOUT_REQUESTS = {}
+XHR_REQUESTS = {}
+RAF_LISTENERS = []
+
+function setTimeout(callback, time_delta) {
+  const handle = Object.keys(SET_TIMEOUT_REQUESTS).length
+  SET_TIMEOUT_REQUESTS[handle] = callback
+  __document.setTimeout(handle, time_delta)
+}
+
+function requestAnimationFrame(fn) {
+  RAF_LISTENERS.push(fn)
+  __document.requestAnimationFrame()
+}
+
+function __runSetTimeout(handle) {
+  const callback = SET_TIMEOUT_REQUESTS[handle]
+  callback()
+}
+
+function __runXHROnload(body, handle) {
+  const obj = XHR_REQUESTS[handle]
+  const evt = new Event("load")
+  obj.responseText = body
+  if (obj.onload)
+    obj.onload(evt)
+  return evt.do_default
+}
+
+function __runRAFHandlers() {
+  const handlers_copy = RAF_LISTENERS
+  RAF_LISTENERS = []
+  for (const handler of handlers_copy) {
+    handler()
+  }
+}
 
 class Node {
   constructor(handle) {
@@ -103,17 +138,18 @@ for (let id in ids) {
 
 class XMLHttpRequest {
   constructor() {
-
+    this.handle = Object.keys(XHR_REQUESTS).length
+    XHR_REQUESTS[this.handle] = this
   }
 
   open(method, url, is_async) {
-    if (is_async) throw Error("Asynchronous XHR is not supported")
+    this.is_async = is_async
     this.method = method
     this.url = url
   }
 
   send(body) {
-    this.responseText = __document.sendXMLHttpRequest(this.method, this.url, body)
+    this.responseText = __document.sendXMLHttpRequest(this.method, this.url, body, this.is_async, this.handle)
   }
 }
 

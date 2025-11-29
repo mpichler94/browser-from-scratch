@@ -5,7 +5,6 @@ import io.github.humbleui.jwm.MouseButton
 import io.github.humbleui.skija.Canvas
 import io.github.humbleui.types.Point
 import io.github.humbleui.types.Rect
-import io.github.mpichler94.util.coerceIn
 import io.github.mpichler94.browser.io.HttpClient
 import io.github.mpichler94.browser.io.Response
 import io.github.mpichler94.browser.io.URL
@@ -16,50 +15,16 @@ import io.github.mpichler94.browser.layout.printTree
 import io.github.mpichler94.browser.layout.toList
 import io.github.mpichler94.browser.render.Drawable
 import io.github.mpichler94.browser.render.contains
+import io.github.mpichler94.util.coerceIn
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.io.File
 import java.net.URLEncoder
 import javax.net.ssl.SSLException
 import kotlin.math.min
 
-class Tab(private val browser: Browser) {
-    private val logger = KotlinLogging.logger {}
-    private val client = HttpClient.instance
-
-    private val defaultStyleSheet: Map<Selector, Map<String, String>> =
-        CssParser(Tab::class.java.getResource("/browser.css")!!.readText()).parse()
-    private val inheritedProperties = mapOf(
-            "color" to "black",
-            "font-size" to "16px",
-            "font-style" to "normal",
-            "font-weight" to "normal",
-            "font-family" to "sans-serif"
-        )
-
-    private var width: Float = 0f
-    private var height: Float = 0f
-    private val vStep = 50
-
-    private var rawUrl = "about:blank"
-    internal var url: URL? = null
-        private set
-    internal var decoratedUrl: String = ""
-        private set
-    private var history = mutableListOf<String>()
-    private var historyIndex = -1
-    internal var scroll = 0f
-    private set
-
-    internal var nodes: Token? = null
-        private set
-    internal var document: Layout? = null
-        private set
-    private var displayList = emptyList<Drawable>()
-    private var rules = listOf<Pair<Selector, Map<String, String>>>()
-    private var focus: Element? = null
-    private var js: JsContext? = null
-    private val allowedOrigins: MutableSet<String> = mutableSetOf()
-
+class Tab(
+    private val browser: Browser,
+) {
     val title: String
         get() {
             nodes?.let { html ->
@@ -82,27 +47,67 @@ class Tab(private val browser: Browser) {
             }
             return rawUrl
         }
+    val measure get() = browser.measure
+
+    internal val taskRunner = TaskRunner()
+    internal var url: URL? = null
+        private set
+    internal var decoratedUrl: String = ""
+        private set
+    internal var scroll = 0f
+        private set
+    internal var nodes: Token? = null
+        private set
+    internal var document: Layout? = null
+        private set
+
+    private val logger = KotlinLogging.logger {}
+    private val client = HttpClient.instance
+    private val defaultStyleSheet: Map<Selector, Map<String, String>> =
+        CssParser(Tab::class.java.getResource("/browser.css")!!.readText()).parse()
+    private val inheritedProperties = mapOf(
+        "color" to "black",
+        "font-size" to "16px",
+        "font-style" to "normal",
+        "font-weight" to "normal",
+        "font-family" to "sans-serif",
+    )
+    private val vStep = 50
+    private val allowedOrigins: MutableSet<String> = mutableSetOf()
+    private var width: Float = 0f
+    private var height: Float = 0f
+    private var rawUrl = "about:blank"
+    private var history = mutableListOf<String>()
+    private var historyIndex = -1
+    private var displayList = emptyList<Drawable>()
+    private var rules = listOf<Pair<Selector, Map<String, String>>>()
+    private var focus: Element? = null
+    private var js: JsContext? = null
+    private var needsRender = false
 
     fun resize(width: Float, height: Float) {
         this.width = width
         this.height = height
         val documentHeight = document?.height ?: 0f
-        if (documentHeight > height) {
-            scroll = scroll.coerceIn(0f, (document?.height ?: 0f) - height)
+        scroll = if (documentHeight > height) {
+            scroll.coerceIn(0f, (document?.height ?: 0f) - height)
         } else {
-            scroll = 0f
+            0f
         }
 
-        layout()
+        needsRender()
     }
 
     fun mouseClicked(button: MouseButton, x: Float, y: Float) {
+        render()
         focus?.let { it.isFocused = false }
 
         val y = y + scroll
 
         val objects = document?.toList()?.filter {
-            val radius = it.node.style["border-radius"]?.dropLast(2)?.toIntOrNull() ?: 0
+            val radius = it.node.style["border-radius"]
+                ?.dropLast(2)
+                ?.toIntOrNull() ?: 0
             isPointInRoundedRect(Point(x, y), it.rect, radius.toFloat())
         }
 
@@ -141,7 +146,7 @@ class Tab(private val browser: Browser) {
             }
             element = element?.parent
         }
-        render()
+        needsRender()
     }
 
     private fun isPointInRoundedRect(point: Point, rect: Rect, radius: Float): Boolean {
@@ -186,13 +191,11 @@ class Tab(private val browser: Browser) {
         if (focus != null) {
             if (js?.dispatchEvent("keydown", focus!!) == true) return
             focus!!.attributes["value"] = focus!!.attributes["value"] + key
-            render()
+            needsRender()
         }
     }
 
-    fun canGoBack(): Boolean {
-        return historyIndex >= 1
-    }
+    fun canGoBack(): Boolean = historyIndex >= 1
 
     fun goBack() {
         if (historyIndex > 0) {
@@ -201,9 +204,7 @@ class Tab(private val browser: Browser) {
         }
     }
 
-    fun canGoForward(): Boolean {
-        return historyIndex < history.size - 1
-    }
+    fun canGoForward(): Boolean = historyIndex < history.size - 1
 
     fun goForward() {
         if (historyIndex < history.size - 1) {
@@ -228,6 +229,10 @@ class Tab(private val browser: Browser) {
         focus = null
     }
 
+    fun schedule(task: Tab.() -> Unit) {
+        taskRunner.schedule { this.task() }
+    }
+
     private fun doLoad(body: String? = null) {
         val url = history[historyIndex]
         val showSource = url.startsWith("view-source:")
@@ -237,15 +242,13 @@ class Tab(private val browser: Browser) {
         val fragment = url.substringAfter("#", "")
         allowedOrigins.clear()
 
+        this.url = URL(parsedUrl)
+        if (this.url?.scheme == "https") {
+            decoratedUrl = "\uD83D\uDD12 $url"
+        }
+        val response = getResponse(parsedUrl, body)
 
-            this.url = URL(parsedUrl)
-            if (this.url?.scheme == "https") {
-                decoratedUrl = "\uD83D\uDD12 $url"
-            }
-        val response =    getResponse(parsedUrl, body)
-
-
-        if("content-security-policy" in response.headers) {
+        if ("content-security-policy" in response.headers) {
             val csp = response.headers["content-security-policy"]!!.split(' ')
             if (csp.isNotEmpty() && csp.first() == "default-src") {
                 allowedOrigins.clear()
@@ -264,7 +267,8 @@ class Tab(private val browser: Browser) {
             }
             rules = defaultStyleSheet.toList()
 
-            val links = nodes!!.treeToList()
+            val links = nodes!!
+                .treeToList()
                 .filterIsInstance<Element>()
                 .filter { it.tag == "link" && it.attributes["rel"] == "stylesheet" }
                 .filter { "href" in it.attributes }
@@ -276,21 +280,27 @@ class Tab(private val browser: Browser) {
                 rules += CssParser(body).parse().toList()
             }
 
-            val scripts = nodes!!.treeToList()
+            val scripts = nodes!!
+                .treeToList()
                 .filterIsInstance<Element>()
                 .filter { it.tag == "script" && "src" in it.attributes }
                 .map { it.attributes["src"]!! }
 
+            js?.discarded = true
             js = JsContext(this)
             for (script in scripts) {
                 val scriptUrl = URL(parsedUrl).resolve(script)
                 val body = getResponse(scriptUrl.toString()).body
 
-                js?.run(body)
+                taskRunner.schedule {
+                    browser.measure.time("script-load")
+                    js?.run(body)
+                    browser.measure.stop("script-load")
+                }
             }
 
-            nodes!!.style()
-            layout()
+            needsRender()
+
             scroll = 0f
             if (fragment.isNotBlank()) {
                 val element = document?.findId(fragment)
@@ -304,7 +314,7 @@ class Tab(private val browser: Browser) {
     private fun getResponse(url: String, body: String? = null): Response {
         val parsedUrl = URL(url)
 
-        if (allowedOrigins.isNotEmpty() && parsedUrl.origin !in allowedOrigins) {
+        if (!allowedRequest(parsedUrl)) {
             logger.warn { "Blocked request $url due to CSP" }
             return Response(403, mapOf(), "")
         }
@@ -337,6 +347,7 @@ class Tab(private val browser: Browser) {
             return
         }
         nodes?.run {
+            style()
             document = DocumentLayout(this, width)
             document!!.layout()
             if (logger.isDebugEnabled()) {
@@ -346,18 +357,37 @@ class Tab(private val browser: Browser) {
         }
     }
 
-    internal fun render() {
+    private fun render() {
+        if (!needsRender) return
+        needsRender = false
+
+        browser.measure.time("render")
         nodes!!.style()
         layout()
+        browser.needsRasterAndDraw()
+        browser.measure.stop("render")
     }
 
-    fun raster(canvas: Canvas, scale: Float) {
-        for (cmd in displayList) {
-            cmd.execute(canvas, scale)
-        }
+    fun runAnimationFrame() {
+        browser.measure.time("script-runRAFHandlers")
+        js?.run("__runRAFHandlers()")
+        browser.measure.stop("script-runRAFHandlers")
+
+        render()
+
+        val commitData = CommitData(decoratedUrl!!, scroll, document!!.height, displayList)
+        displayList = emptyList()
+        browser.commit(this, commitData)
     }
 
+    fun needsRender() {
+        needsRender = true
+        needsAnimationFrame()
+    }
 
+    fun needsAnimationFrame() {
+        browser.needsAnimationFrame(this)
+    }
 
     fun scroll(delta: Float) {
         if (delta < 0) { // scroll down
@@ -374,18 +404,21 @@ class Tab(private val browser: Browser) {
         }
     }
 
+    fun allowedRequest(url: URL): Boolean = allowedOrigins.isEmpty() || url.origin in allowedOrigins
+
     private fun submitForm(form: Element) {
         if (js?.dispatchEvent("submit", form) == true) return
 
-        val inputs = form.treeToList()
+        val inputs = form
+            .treeToList()
             .filterIsInstance<Element>()
             .filter { it.tag == "input" && "name" in it.attributes }
 
-        val body = inputs.map {
+        val body = inputs.joinToString("&") {
             val name = URLEncoder.encode(it.attributes["name"]!!, Charsets.UTF_8).replace("+", "%20")
             val value = URLEncoder.encode(it.attributes["value"] ?: "", Charsets.UTF_8).replace("+", "%20")
             "$name=$value"
-        }.joinToString("&")
+        }
         val url = url!!.resolve(form.attributes["action"]!!)
         load(url.toString(), body)
     }
@@ -441,4 +474,3 @@ class Tab(private val browser: Browser) {
         children.forEach { it.style() }
     }
 }
-

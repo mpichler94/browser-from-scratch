@@ -98,7 +98,7 @@ class Chrome(
         if (focus == "adress bar") {
             when (keyCode) {
                 Key.ENTER -> {
-                    browser.load(addressBar)
+                    browser.scheduleLoad(addressBar)
                     addressBar = ""
                     cursorPos = 0
                     focus = null
@@ -114,9 +114,18 @@ class Chrome(
                     cursorPos--
                 }
 
-                Key.ESCAPE -> focus = null
-                Key.LEFT -> cursorPos = (cursorPos - 1).coerceAtLeast(0)
-                Key.RIGHT -> cursorPos = (cursorPos + 1).coerceAtMost(addressBar.length)
+                Key.ESCAPE -> {
+                    focus = null
+                }
+
+                Key.LEFT -> {
+                    cursorPos = (cursorPos - 1).coerceAtLeast(0)
+                }
+
+                Key.RIGHT -> {
+                    cursorPos = (cursorPos + 1).coerceAtMost(addressBar.length)
+                }
+
                 else -> {}
             }
             return true
@@ -183,7 +192,7 @@ class Chrome(
             )
         } else {
             var x = addressRect.left + padding
-            var url = browser.activeTab?.decoratedUrl ?: ""
+            var url = browser.commitData?.url ?: ""
 
             if (url.startsWith("Unsafe")) {
                 cmds.add(DrawText(x, addressRect.top, "Unsafe", boldFont, Color.BLACK))

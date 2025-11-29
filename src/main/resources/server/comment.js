@@ -22,3 +22,8 @@ form.addEventListener("submit", function(e) {
 });
 
 console.log("Cookie:" + document.cookie)
+
+const x = new XMLHttpRequest()
+x.open("GET", "/example4-form.html", true)
+x.send()
+x.onload = function(evt) { console.log('loaded /example4-form.html:' + x.responseText) }

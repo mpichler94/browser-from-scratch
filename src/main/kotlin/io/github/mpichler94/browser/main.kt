@@ -4,10 +4,11 @@ import io.github.humbleui.jwm.App
 import java.io.File
 
 fun main(args: Array<String>) {
-
     println("JVM Name: " + System.getProperty("java.vm.name"))
     println("JVM Version: " + System.getProperty("java.version"))
     println("Java Home: " + System.getProperty("java.home"))
+
+    Thread.currentThread().name = "Browser"
 
     App.start {
         val window = App.makeWindow()

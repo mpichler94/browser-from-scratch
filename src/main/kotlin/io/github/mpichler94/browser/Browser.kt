@@ -24,6 +24,8 @@ import io.github.mpichler94.browser.io.Request
 import io.github.mpichler94.browser.io.URL
 import io.github.mpichler94.browser.render.Color
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 import kotlin.math.ceil
 
@@ -32,27 +34,33 @@ class Browser(
     url: String,
 ) : Consumer<Event> {
     val tabs = mutableListOf<Tab>()
-    private val executor = Executors.newSingleThreadExecutor { Thread(it, "Worker") }
-    private val chrome = Chrome(this)
-    private val layer: LayerGLSkija = LayerGLSkija()
-    private var chromeSurface: Surface = Surface.makeRaster(
-        ImageInfo.makeN32Premul(window.contentRect.width, ceil(chrome.bottom / window.screen.scale).toInt()),
-    )
-    private var tabSurface: Surface? = null
-    private var tabSurfaceY: Int = 0
+    val measure = MeasureTime()
+
     var activeTab: Tab? = null
         set(value) {
             field = value
             val width = window.contentRect.width / window.screen.scale
             val height = window.contentRect.height / window.screen.scale
             value?.resize(width, height)
-            App.runOnUIThread {
-                rasterChrome()
-                rasterTab()
-                window.requestFrame()
-            }
+            needsRasterAndDraw()
+            value?.taskRunner?.start()
         }
+    var commitData: CommitData? = null
+        private set
+
+    private val executor = Executors.newSingleThreadScheduledExecutor { Thread(it, "Worker") }
+    private val chrome = Chrome(this)
+    private val layer: LayerGLSkija = LayerGLSkija()
+
+    private var chromeSurface: Surface = Surface.makeRaster(
+        ImageInfo.makeN32Premul(window.contentRect.width, ceil(chrome.bottom / window.screen.scale).toInt()),
+    )
+    private var tabSurface: Surface? = null
+    private var tabSurfaceY: Int = 0
     private var focus: String? = null
+    private var animationTimer: ScheduledFuture<*>? = null
+    private var needsRasterAndDraw = true
+    private var needsAnimationFrame = true
 
     init {
         window.layer = layer
@@ -66,29 +74,29 @@ class Browser(
         newTab(url)
     }
 
+    @Synchronized
     override fun accept(e: Event) {
         when (e) {
             is EventWindowResize, is EventWindowScreenChange -> {
-                executor.submit {
-                    chromeSurface = chromeSurface.makeSurface(
-                        window.contentRect.width,
-                        ceil(chrome.bottom * window.screen.scale).toInt(),
-                    )!!
+                chromeSurface = chromeSurface.makeSurface(
+                    window.contentRect.width,
+                    ceil(chrome.bottom * window.screen.scale).toInt(),
+                )!!
 
-                    val width = window.contentRect.width / window.screen.scale
-                    val height = window.contentRect.height / window.screen.scale
+                val width = window.contentRect.width / window.screen.scale
+                val height = window.contentRect.height / window.screen.scale
 
-                    chrome.resize(width, height)
-                    activeTab?.resize(width, height - chrome.bottom)
-                    rasterChrome()
-                    rasterTab()
-                    App.runOnUIThread {
-                        window.requestFrame()
-                    }
+                chrome.resize(width, height)
+                needsRasterAndDraw()
+                activeTab?.schedule {
+                    resize(width, height)
+                    needsRasterAndDraw()
                 }
             }
 
             is EventWindowCloseRequest -> {
+                tabs.forEach { it.taskRunner.needsQuit() }
+                measure.finish()
                 window.close()
                 App.terminate()
             }
@@ -103,18 +111,12 @@ class Browser(
                     activeTab?.blur()
                     chrome.mouseClicked(e.button, x, y)
                     focus = null
-                    rasterChrome()
+                    needsRasterAndDraw()
                 } else {
                     focus = "content"
                     chrome.blur()
-                    val url = activeTab?.decoratedUrl
-                    activeTab?.mouseClicked(e.button, x, y - chrome.bottom)
-                    if (url != activeTab?.decoratedUrl) {
-                        rasterChrome()
-                    }
-                    rasterTab()
+                    activeTab?.schedule { mouseClicked(e.button, x, y - chrome.bottom) }
                 }
-                window.requestFrame()
             }
 
             is EventMouseScroll -> {
@@ -122,9 +124,8 @@ class Browser(
                 val scroll = (activeTab?.scroll ?: 0f) * window.screen.scale
                 if (scroll < tabSurfaceY || scroll > tabSurfaceY + tabSurface!!.height - window.contentRect.height) {
                     tabSurfaceY = (scroll.toInt() - tabSurface!!.height / 2).coerceAtLeast(0)
-                    rasterTab()
                 }
-                window.requestFrame()
+                needsRasterAndDraw()
             }
 
             is EventKey -> {
@@ -133,52 +134,66 @@ class Browser(
                 }
 
                 when (e.key) {
-                    Key.DOWN -> activeTab?.scroll(-10f)
-                    Key.UP -> activeTab?.scroll(10f)
-                    Key.F5 -> executor.submit {
-                        activeTab?.reload()
-                        App.runOnUIThread { rasterTab() }
+                    Key.DOWN -> {
+                        activeTab?.scroll(-10f)
                     }
+
+                    Key.UP -> {
+                        activeTab?.scroll(10f)
+                    }
+
+                    Key.F5 -> {
+                        activeTab?.schedule { reload() }
+                    }
+
                     else -> {
                         val consumed = chrome.keyPressed(e.key)
                         if (!consumed) {
                             if (focus == "content") {
-                                activeTab?.keyPressed(e.key)
-                                rasterTab()
+                                activeTab?.schedule { keyPressed(e.key) }
                             }
                         } else {
-                            rasterChrome()
+                            needsRasterAndDraw()
                         }
                     }
                 }
-                window.requestFrame()
             }
 
             is EventTextInput -> {
                 val consumed = chrome.keyTyped(e.text[0])
                 if (!consumed) {
                     if (focus == "content") {
-                        activeTab?.keyTyped(e.text[0])
-                        rasterTab()
+                        activeTab?.schedule { keyTyped(e.text[0]) }
                     }
                 } else {
-                    rasterChrome()
+                    needsRasterAndDraw()
                 }
-                window.requestFrame()
             }
 
             is EventFrameSkija -> {
-                draw()
-//                window.requestFrame() // for animation
+                if (needsRasterAndDraw) {
+                    measure.time("raster")
+                    rasterChrome()
+                    rasterTab()
+                    draw()
+                    measure.stop("raster")
+                } else {
+                    draw()
+                }
+
+                needsRasterAndDraw = false
+                window.requestFrame() // for animation
+                scheduleAnimationFrame()
             }
         }
     }
 
+    @Synchronized
     fun newTab(url: String) {
         val tab = Tab(this)
-        tab.load(url)
         activeTab = tab
         tabs.add(tab)
+        scheduleLoad(url)
     }
 
     fun removeTab(index: Int) {
@@ -191,33 +206,50 @@ class Browser(
         activeTab = tabs[newIndex]
     }
 
-    fun load(url: String, body: String? = null) {
-        executor.submit {
-            activeTab?.load(url, body)
-            App.runOnUIThread {
-                rasterTab()
-                window.requestFrame()
-            }
-        }
+    fun scheduleLoad(url: String, body: String? = null) {
+        activeTab?.taskRunner?.clearPendingTasks()
+        activeTab?.schedule { load(url, body) }
     }
 
     fun goBack() {
-        executor.submit {
-            activeTab?.goBack()
-            App.runOnUIThread {
-                rasterTab()
-                window.requestFrame()
-            }
-        }
+        activeTab?.taskRunner?.clearPendingTasks()
+        activeTab?.schedule { goBack() }
     }
 
     fun goForward() {
-        executor.submit {
-            activeTab?.goForward()
-            App.runOnUIThread {
-                rasterTab()
-                window.requestFrame()
-            }
+        activeTab?.taskRunner?.clearPendingTasks()
+        activeTab?.schedule { goForward() }
+    }
+
+    fun scheduleAnimationFrame() {
+        if (needsAnimationFrame && animationTimer == null) {
+            val activeTab = this.activeTab
+            animationTimer = executor.schedule({
+                activeTab?.schedule {
+                    needsAnimationFrame = false
+                    runAnimationFrame()
+                }
+                animationTimer = null
+            }, 33, TimeUnit.MILLISECONDS)
+        }
+    }
+
+    fun needsRasterAndDraw() {
+        needsRasterAndDraw = true
+    }
+
+    fun needsAnimationFrame(tab: Tab) {
+        if (tab == activeTab) {
+            needsAnimationFrame = true
+        }
+    }
+
+    @Synchronized
+    fun commit(tab: Tab, data: CommitData) {
+        if (tab == activeTab) {
+            commitData = data
+            animationTimer = null
+            needsRasterAndDraw()
         }
     }
 
@@ -272,7 +304,9 @@ class Browser(
         val scale = window.screen.scale
         canvas.scale(scale, scale)
 
-        activeTab?.raster(canvas, 1f)
+        commitData?.displayList?.forEach { cmd ->
+            cmd.execute(canvas, 1f)
+        }
         canvas.restore()
     }
 

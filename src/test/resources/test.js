@@ -13,7 +13,7 @@ function lengthCheck() {
     console.log("Input" + name + " has " + value.length + " characters")
 }
 const inputs = document.querySelectorAll("input")
-for (var i = 0; i < inputs.length; i++) {
+for (let i = 0; i < inputs.length; i++) {
     inputs[i].addEventListener("keydown", lengthCheck)
 }
 
@@ -47,10 +47,19 @@ console.log(b2.innerHTML)
 
 console.log(form.innerHTML)
 
+function callback() { console.log("Callback") }
+setTimeout(callback, 1000);
+
 document.cookie = "foo=bar; SameSite"
 
 console.log("Cookie:" + document.cookie)
 
-const x = new XMLHttpRequest()
-x.open("GET", "https://webbrowsertools.com/test-cors/", false)
-x.send()
+let count = 0
+function callback2() {
+  const output = document.querySelectorAll("div")[1]
+  output.innerHTML = "count: " + (count++)
+  if (count < 100) {
+    requestAnimationFrame(callback2)
+  }
+}
+requestAnimationFrame(callback2)
