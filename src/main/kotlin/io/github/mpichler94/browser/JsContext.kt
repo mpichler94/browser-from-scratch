@@ -2,6 +2,7 @@ package io.github.mpichler94.browser
 
 import io.github.mpichler94.browser.io.Cookie
 import io.github.mpichler94.browser.io.HttpClient
+import io.github.mpichler94.browser.io.URL
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.graalvm.polyglot.Context
 import org.graalvm.polyglot.HostAccess
@@ -11,8 +12,8 @@ import java.io.OutputStream
 class JsContext(
     private val tab: Tab,
 ) {
-    val logger = KotlinLogging.logger {}
-    val context = Context
+    private val logger = KotlinLogging.logger {}
+    private val context = Context
         .newBuilder("js")
 //        .sandbox(SandboxPolicy.CONSTRAINED)
         .allowHostAccess(
@@ -27,8 +28,10 @@ class JsContext(
         .err(OutputStream.nullOutputStream())
         .build()
 
-    val nodeToHandle = mutableMapOf<Element, Int>()
-    val handleToNode = mutableMapOf<Int, Element>()
+    private val nodeToHandle = mutableMapOf<Element, Int>()
+    private val handleToNode = mutableMapOf<Int, Element>()
+
+    var discarded = false
 
     init {
         context.getBindings("js").putMember("console", Console())
@@ -36,7 +39,9 @@ class JsContext(
         context.getBindings("js").putMember("tab", tab)
 
         val runtimeJs = JsContext::class.java.getResource("/runtime.js").readText()
+        tab.measure.time("script-runtime")
         context.eval("js", runtimeJs)
+        tab.measure.stop("script-runtime")
     }
 
     fun run(code: String): Value {
@@ -52,7 +57,9 @@ class JsContext(
 
     fun dispatchEvent(type: String, element: Element): Boolean {
         val handle = nodeToHandle[element] ?: return false
+        tab.measure.time("script-dispatchEvent")
         val value = run("new Node($handle).dispatchEvent(new Event(\"$type\"))")
+        tab.measure.stop("script-dispatchEvent")
         val doDefault = value.getMember("do_default")?.asBoolean() ?: true
         val propagate = value.getMember("propagate")?.asBoolean() ?: true
 
@@ -134,7 +141,7 @@ class JsContext(
             for (child in elt.children) {
                 child.parent = elt
             }
-            tab.render()
+            tab.needsRender()
         }
 
         @HostAccess.Export
@@ -192,7 +199,7 @@ class JsContext(
                 parent.children.add(index, child)
             }
             child.parent = parent
-            tab.render()
+            tab.needsRender()
         }
 
         @HostAccess.Export
@@ -213,13 +220,30 @@ class JsContext(
                 ?.associate { it.attributes["id"]!! to it.getHandle() } ?: emptyMap()
 
         @HostAccess.Export
-        fun sendXMLHttpRequest(method: String, url: String, body: String?): String? {
+        fun sendXMLHttpRequest(
+            method: String,
+            url: String,
+            body: String?,
+            isAsync: Boolean,
+            handle: Int,
+        ): String? {
             val fullUrl = tab.url?.resolve(url) ?: return null
+            if (!tab.allowedRequest(fullUrl)) {
+                throw IllegalArgumentException("Cross-origin XHR blocked by CSP")
+            }
 
-            val request = fullUrl.createRequest(method, tab.url, body)
+            if (!isAsync) return runLoad(fullUrl, method, body, handle)
+            Thread.ofVirtual().start {
+                runLoad(fullUrl, method, body, handle)
+            }
+            return null
+        }
+
+        private fun runLoad(url: URL, method: String, body: String?, handle: Int): String {
+            val request = url.createRequest(method, tab.url, body)
             val response = HttpClient.instance.request(request)
 
-            if (fullUrl.origin != tab.url?.origin) {
+            if (url.origin != tab.url?.origin) {
                 if ("access-control-allow-origin" in response.headers) {
                     val allowedOrigin = response.headers["access-control-allow-origin"]!!
                     if (allowedOrigin == "*" || allowedOrigin == tab.url?.origin) {
@@ -229,7 +253,38 @@ class JsContext(
                 throw IllegalArgumentException("Cross-origin XHR request not allowed")
             }
 
+            tab.taskRunner.schedule {
+                dispatchXhrOnload(response.body, handle)
+            }
+
             return response.body
+        }
+
+        private fun dispatchXhrOnload(body: String, handle: Int) {
+            if (discarded) return
+            tab.measure.time("script-runXHROnload")
+            val doDefault = run("__runXHROnload('$body', $handle)").asBoolean()
+            tab.measure.stop("script-runXHROnload")
+        }
+
+        @HostAccess.Export
+        fun setTimeout(handle: Int, timeDelta: Long) {
+            Thread.ofVirtual().start {
+                Thread.sleep(timeDelta)
+                if (discarded) return@start
+                tab.taskRunner.schedule {
+                    if (discarded) return@schedule
+                    tab.measure.time("script-runSetTimeout")
+                    run("__runSetTimeout($handle)")
+                    tab.measure.stop("script-runSetTimeout")
+                }
+            }
+        }
+
+        @HostAccess.Export
+        fun requestAnimationFrame() {
+            tab.needsAnimationFrame()
+//            tab.taskRunner.schedule { tab.render() }
         }
     }
 }

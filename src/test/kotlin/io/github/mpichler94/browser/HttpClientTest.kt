@@ -145,7 +145,7 @@ class HttpClientTest {
     @Test
     fun `requests a resource from mock server`() {
         val url = URL("http://localhost:8080/index.html")
-        val client = HttpClient()
+        val client = HttpClient.instance
         val response = client.request(Request(url, "GET", mapOf("connection" to "keep-alive", "accept-encoding" to "gzip")))
 
         assertThat(response.body)
@@ -157,7 +157,7 @@ class HttpClientTest {
     @Test
     fun `should load simple sample`() {
         val url = "http://localhost:8080/example1-simple.html"
-        val client = HttpClient()
+        val client = HttpClient.instance
 
         assertThat(client.request(Request(URL(url), "GET", mapOf("connection" to "keep-alive"))).body)
             .startsWith("<html>")
@@ -167,7 +167,7 @@ class HttpClientTest {
     @Test
     fun `should follow redirects`() {
         val url = "http://localhost:8080/redirect"
-        val client = HttpClient()
+        val client = HttpClient.instance
 
         assertThat(client.request(Request(URL(url), "GET", mapOf("connection" to "keep-alive"))).body)
             .startsWith("<!DOCTYPE html>")
@@ -177,7 +177,7 @@ class HttpClientTest {
     @Test
     fun `should follow redirects 2`() {
         val url = "http://localhost:8080/redirect2"
-        val client = HttpClient()
+        val client = HttpClient.instance
 
         assertThat(client.request(Request(URL(url), "GET", mapOf("connection" to "keep-alive"))).body)
             .startsWith("<!DOCTYPE html>")
@@ -187,7 +187,7 @@ class HttpClientTest {
     @Test
     fun `should follow redirects 3`() {
         val url = "http://localhost:8080/redirect3"
-        val client = HttpClient()
+        val client = HttpClient.instance
 
         assertThat(client.request(Request(URL(url), "GET", mapOf("connection" to "keep-alive"))).body)
             .startsWith("<!DOCTYPE html>")
@@ -197,7 +197,7 @@ class HttpClientTest {
     @Test
     fun `should load chunked response`() {
         val url = "http://localhost:8080/example9-chunked.html"
-        val client = HttpClient()
+        val client = HttpClient.instance
 
         assertThat(client.request(Request(URL(url), "GET", mapOf("connection" to "keep-alive"))).body)
             .startsWith("<html>")
@@ -207,7 +207,7 @@ class HttpClientTest {
     @Test
     fun `should handle gzip encoding`() {
         val url = "http://localhost:8080/gzip-test"
-        val client = HttpClient()
+        val client = HttpClient.instance
 
         val response = client.request(Request(URL(url), "GET", mapOf("accept-encoding" to "gzip")))
 
@@ -217,7 +217,7 @@ class HttpClientTest {
     @Test
     fun `should throw exception for invalid scheme`() {
         val url = URL("file://example.com")
-        val client = HttpClient()
+        val client = HttpClient.instance
 
         assertThatThrownBy {
             client.request(Request(url, "GET"))
@@ -228,7 +228,7 @@ class HttpClientTest {
     fun `should reuse socket for same origin`() {
         val url1 = "http://localhost:8080/example1-simple.html"
         val url2 = "http://localhost:8080/index.html"
-        val client = HttpClient()
+        val client = HttpClient.instance
 
         val response1 = client.request(Request(URL(url1), "GET"))
         val response2 = client.request(Request(URL(url2), "GET"))

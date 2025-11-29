@@ -5,7 +5,7 @@
         </encoder>
     </appender>
 
-    <logger name="io.github.mpichler94.browser.HttpClient" level="INFO"/>
+    <logger name="io.github.mpichler94.browser.io.HttpClient" level="INFO"/>
     <logger name="io.github.mpichler94.browser.Tab" level="INFO"/>
     <logger name="io.github.mpichler94.browser.CssParser" level="INFO"/>
 
