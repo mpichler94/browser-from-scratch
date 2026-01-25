@@ -23,6 +23,7 @@ import io.github.mpichler94.browser.io.HttpClient
 import io.github.mpichler94.browser.io.Request
 import io.github.mpichler94.browser.io.URL
 import io.github.mpichler94.browser.render.Color
+import io.github.mpichler94.browser.render.Drawable
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
@@ -39,13 +40,20 @@ class Browser(
     var activeTab: Tab? = null
         set(value) {
             field = value
+            activeTabUrl
+            activeTabScroll
+            activeTabDisplayList
+            activeTabHeight
             val width = window.contentRect.width / window.screen.scale
             val height = window.contentRect.height / window.screen.scale
-            value?.resize(width, height)
-            needsRasterAndDraw()
-            value?.taskRunner?.start()
+            value?.apply {
+                resize(width, height)
+                needsRasterAndDraw()
+                needsAnimationFrame(this)
+                taskRunner.start()
+            }
         }
-    var commitData: CommitData? = null
+    var activeTabUrl: String? = null
         private set
 
     private val executor = Executors.newSingleThreadScheduledExecutor { Thread(it, "Worker") }
@@ -61,6 +69,9 @@ class Browser(
     private var animationTimer: ScheduledFuture<*>? = null
     private var needsRasterAndDraw = true
     private var needsAnimationFrame = true
+    private var activeTabScroll: Float = 0f
+    private var activeTabDisplayList: List<Drawable> = emptyList()
+    private var activeTabHeight: Float = 800f
 
     init {
         window.layer = layer
@@ -120,12 +131,19 @@ class Browser(
             }
 
             is EventMouseScroll -> {
-                activeTab?.scroll(e.deltaY / window.screen.scale * 0.5f)
-                val scroll = (activeTab?.scroll ?: 0f) * window.screen.scale
-                if (scroll < tabSurfaceY || scroll > tabSurfaceY + tabSurface!!.height - window.contentRect.height) {
-                    tabSurfaceY = (scroll.toInt() - tabSurface!!.height / 2).coerceAtLeast(0)
+                synchronized(this) {
+                    if (activeTab == null) return
+                    activeTabScroll = clampScroll(activeTabScroll - e.deltaY)
+                    needsRasterAndDraw()
+                    needsAnimationFrame(activeTab!!)
                 }
-                needsRasterAndDraw()
+//                clampScroll(activeTabScroll - e.deltaY)
+//                activeTab?.scroll(e.deltaY / window.screen.scale * 0.5f)
+//                val scroll = (activeTab?.scroll ?: 0f) * window.screen.scale
+//                if (scroll < tabSurfaceY || scroll > tabSurfaceY + tabSurface!!.height - window.contentRect.height) {
+//                    tabSurfaceY = (scroll.toInt() - tabSurface!!.height / 2).coerceAtLeast(0)
+//                }
+//                needsRasterAndDraw()
             }
 
             is EventKey -> {
@@ -224,10 +242,11 @@ class Browser(
     fun scheduleAnimationFrame() {
         if (needsAnimationFrame && animationTimer == null) {
             val activeTab = this.activeTab
+            val scroll = activeTabScroll
             animationTimer = executor.schedule({
                 activeTab?.schedule {
                     needsAnimationFrame = false
-                    runAnimationFrame()
+                    runAnimationFrame(scroll)
                 }
                 animationTimer = null
             }, 33, TimeUnit.MILLISECONDS)
@@ -247,7 +266,14 @@ class Browser(
     @Synchronized
     fun commit(tab: Tab, data: CommitData) {
         if (tab == activeTab) {
-            commitData = data
+            activeTabUrl = data.url
+            if (data.scroll != null) {
+                activeTabScroll = data.scroll
+            }
+            activeTabHeight = data.height
+            if (data.displayList.isNotEmpty()) {
+                activeTabDisplayList = data.displayList
+            }
             animationTimer = null
             needsRasterAndDraw()
         }
@@ -263,7 +289,7 @@ class Browser(
         canvas.clear(Color.WHITE.value)
 
         val tabRect = IRect.makeLTRB(0, (chrome.bottom * scale).toInt(), width, height)
-        val tabOffset = chrome.bottom - (activeTab?.scroll ?: 0f) + tabSurfaceY / scale
+        val tabOffset = chrome.bottom - activeTabScroll + tabSurfaceY / scale
         canvas.save()
         canvas.clipRect(tabRect.toRect())
         canvas.translate(0f, tabOffset * scale)
@@ -293,7 +319,7 @@ class Browser(
         if (tabSurface == null || tabSurface?.height != tabHeight || tabSurface?.width != window.contentRect.width) {
             tabSurface = Surface.makeRaster(ImageInfo.makeN32Premul(window.contentRect.width, tabHeight))
         }
-        val scroll = (activeTab?.scroll ?: 0f) * window.screen.scale
+        val scroll = activeTabScroll * window.screen.scale
         tabSurfaceY = (scroll - tabSurface!!.height.toFloat() / 2f).toInt().coerceAtLeast(0)
 
         val canvas = tabSurface!!.canvas
@@ -304,7 +330,7 @@ class Browser(
         val scale = window.screen.scale
         canvas.scale(scale, scale)
 
-        commitData?.displayList?.forEach { cmd ->
+        activeTabDisplayList.forEach { cmd ->
             cmd.execute(canvas, 1f)
         }
         canvas.restore()
@@ -326,7 +352,7 @@ class Browser(
         if (height == 0f || documentHeight < height) {
             return
         }
-        val scroll = activeTab?.scroll ?: 0f
+        val scroll = activeTabScroll
 
         val scrollPosition = height * scroll / documentHeight
         val scrollBarHeight = height * height / documentHeight
@@ -334,6 +360,12 @@ class Browser(
         paint.color = Color.BLACK.value
         val rect = Rect.makeXYWH((width - 10), (scrollPosition), 10.0f, scrollBarHeight)
         canvas.drawRect(rect, paint)
+    }
+
+    private fun clampScroll(scroll: Float): Float {
+        val height = activeTabHeight ?: 800f
+        val maxScroll = height - (window.contentRect.height / window.screen.scale - chrome.bottom)
+        return scroll.coerceIn(0f, maxScroll)
     }
 }
 

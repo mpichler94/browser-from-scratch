@@ -2,7 +2,6 @@ package io.github.mpichler94.browser
 
 import io.github.humbleui.jwm.Key
 import io.github.humbleui.jwm.MouseButton
-import io.github.humbleui.skija.Canvas
 import io.github.humbleui.types.Point
 import io.github.humbleui.types.Rect
 import io.github.mpichler94.browser.io.HttpClient
@@ -84,15 +83,20 @@ class Tab(
     private var focus: Element? = null
     private var js: JsContext? = null
     private var needsRender = false
+    private var scrollChangedInTab = false
 
     fun resize(width: Float, height: Float) {
         this.width = width
         this.height = height
         val documentHeight = document?.height ?: 0f
-        scroll = if (documentHeight > height) {
+        val newScroll = if (documentHeight > height) {
             scroll.coerceIn(0f, (document?.height ?: 0f) - height)
         } else {
             0f
+        }
+        if (newScroll != scroll) {
+            scrollChangedInTab = true
+            scroll = newScroll
         }
 
         needsRender()
@@ -308,6 +312,7 @@ class Tab(
                     scroll = element.y
                 }
             }
+            scrollChangedInTab = true
         }
     }
 
@@ -362,22 +367,27 @@ class Tab(
         needsRender = false
 
         browser.measure.time("render")
-        nodes!!.style()
         layout()
         browser.needsRasterAndDraw()
         browser.measure.stop("render")
     }
 
-    fun runAnimationFrame() {
+    fun runAnimationFrame(scroll: Float) {
+        if (!scrollChangedInTab) {
+            this.scroll = scroll
+        }
         browser.measure.time("script-runRAFHandlers")
         js?.run("__runRAFHandlers()")
         browser.measure.stop("script-runRAFHandlers")
 
         render()
 
-        val commitData = CommitData(decoratedUrl!!, scroll, document!!.height, displayList)
+        val newScroll = if (scrollChangedInTab) this.scroll else null
+
+        val commitData = CommitData(decoratedUrl, newScroll, document!!.height, displayList)
         displayList = emptyList()
         browser.commit(this, commitData)
+        scrollChangedInTab = false
     }
 
     fun needsRender() {
@@ -390,17 +400,22 @@ class Tab(
     }
 
     fun scroll(delta: Float) {
+        val maxscroll = (document?.height ?: 0f) - height + 2f * vStep
         if (delta < 0) { // scroll down
-            val maxscroll = (document?.height ?: 0f) - height + 2f * vStep
             if (scroll >= maxscroll) {
                 return
             }
-            scroll = (scroll - delta).coerceAtMost(maxscroll)
         } else {
             if (scroll <= 0) {
                 return
             }
-            scroll = (scroll - delta).coerceAtLeast(0f)
+        }
+
+        scroll -= delta
+        val clampedScroll = scroll.coerceIn(0f, maxscroll)
+        if (clampedScroll != scroll) {
+            scrollChangedInTab = true
+            scroll = clampedScroll
         }
     }
 

@@ -192,7 +192,7 @@ class Chrome(
             )
         } else {
             var x = addressRect.left + padding
-            var url = browser.commitData?.url ?: ""
+            var url = browser.activeTabUrl ?: ""
 
             if (url.startsWith("Unsafe")) {
                 cmds.add(DrawText(x, addressRect.top, "Unsafe", boldFont, Color.BLACK))
