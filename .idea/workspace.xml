@@ -5,43 +5,33 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="087cc82a-2d80-4c1e-a7b5-8841c3fbe2c2" name="Changes" comment="feat: implement chapter 10 - security">
-      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/git_toolbox_prj.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/kotlinc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/Permanent_Script_Dependencies.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/Browser.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/Drawable.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/layout/Layout.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/main.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/git_toolbox_prj.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/git_toolbox_prj.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/jarRepositories.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/kotlinc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/kotlinc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Permanent_Script_Dependencies.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Permanent_Script_Dependencies.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.mvn/wrapper/maven-wrapper.properties" beforeDir="false" afterPath="$PROJECT_DIR$/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mvnw.cmd" beforeDir="false" afterPath="$PROJECT_DIR$/mvnw.cmd" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/Browser.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/Chrome.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/Chrome.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/CssParser.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/CssParser.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/Drawable.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/HtmlParser.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/HtmlParser.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/HttpClient.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/HttpClient.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/JsContext.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/JsContext.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/Request.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/Request.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/Response.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/Response.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/Tab.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/Tab.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/URL.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/URL.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/layout/BlockLayout.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/layout/BlockLayout.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/layout/InlineLayout.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/layout/InlineLayout.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/layout/InputLayout.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/layout/InputLayout.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/layout/Layout.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/browser/main.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/server/Server.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/server/Server.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/server/main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/server/main.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/io/github/mpichler94/util/StreamUtils.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/util/StreamUtils.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/io/github/mpichler94/browser/BrowserTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/io/github/mpichler94/browser/BrowserTest.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/io/github/mpichler94/browser/CssParserTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/io/github/mpichler94/browser/CssParserTest.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/io/github/mpichler94/browser/HtmlParserTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/io/github/mpichler94/browser/HtmlParserTest.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/io/github/mpichler94/browser/HttpClientTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/io/github/mpichler94/browser/HttpClientTest.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/io/github/mpichler94/browser/URLTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/io/github/mpichler94/browser/URLTest.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/Browser.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/Browser.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/Chrome.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/Chrome.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/CssParser.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/CssParser.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/HtmlParser.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/HtmlParser.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/JsContext.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/JsContext.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/io/HttpClient.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/io/HttpClient.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/io/Request.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/io/Request.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/io/Response.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/io/Response.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/io/URL.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/io/URL.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/layout/BlockLayout.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/layout/BlockLayout.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/layout/InlineLayout.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/layout/InlineLayout.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/layout/InputLayout.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/layout/InputLayout.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/layout/Layout.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/layout/Layout.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/main.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/render/Drawable.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/mpichler94/browser/render/Drawable.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -68,6 +58,16 @@
     &quot;assignee&quot;: &quot;mpichler94&quot;
   }
 }</component>
+  <component name="GitRewordedCommitMessages">
+    <option name="commitMessagesMapping">
+      <RewordedCommitMessageMapping>
+        <option name="originalMessage" value="feat: implement chapter 12 - Scheduling Tasks and Threads" />
+        <option name="rewordedMessage" value="feat: implement chapter 12 - Scheduling Tasks and Threads" />
+      </RewordedCommitMessageMapping>
+    </option>
+    <option name="currentCommit" value="1" />
+    <option name="onto" value="e80a7d695ae161fbf4950c891b3de3a751638e2c" />
+  </component>
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
     &quot;url&quot;: &quot;git@github.com:mpichler94/browser-from-scratch.git&quot;,
@@ -117,46 +117,46 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.Guestbook.executor": "Debug",
-    "Application.Server.executor": "Run",
-    "Application.chapter 8.executor": "Run",
-    "Application.example.executor": "Run",
-    "Application.local example 5.executor": "Run",
-    "Application.rounded.executor": "Debug",
-    "Maven.browser-from-scratch [com.diffplug.spotless:spotless-maven-plugin:3.0.0:apply].executor": "Run",
-    "Maven.browser-from-scratch [com.diffplug.spotless:spotless-maven-plugin:3.0.0:check].executor": "Run",
-    "Maven.browser-from-scratch [compile].executor": "Run",
-    "Maven.browser-from-scratch [install].executor": "Run",
-    "Maven.browser-from-scratch [spotless:apply].executor": "Run",
-    "Maven.browser-from-scratch [verify].executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.restore.workspace.module": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "SONARLINT_PRECOMMIT_ANALYSIS": "true",
-    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultAutoModeForALLUsers.v1": "true",
-    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "main",
-    "ignore.virus.scanning.warn.message": "true",
-    "junie.onboarding.icon.badge.shown": "true",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "O:/01_git",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Project",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.29481733",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
-    "to.speed.mode.migration.done": "true",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.Guestbook.executor&quot;: &quot;Debug&quot;,
+    &quot;Application.Server.executor&quot;: &quot;Run&quot;,
+    &quot;Application.chapter 8.executor&quot;: &quot;Run&quot;,
+    &quot;Application.example.executor&quot;: &quot;Run&quot;,
+    &quot;Application.local example 5.executor&quot;: &quot;Run&quot;,
+    &quot;Application.rounded.executor&quot;: &quot;Debug&quot;,
+    &quot;Maven.browser-from-scratch [com.diffplug.spotless:spotless-maven-plugin:3.0.0:apply].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.browser-from-scratch [com.diffplug.spotless:spotless-maven-plugin:3.0.0:check].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.browser-from-scratch [compile].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.browser-from-scratch [install].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.browser-from-scratch [spotless:apply].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.browser-from-scratch [verify].executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.restore.workspace.module&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;SONARLINT_PRECOMMIT_ANALYSIS&quot;: &quot;true&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultAutoModeForALLUsers.v1&quot;: &quot;true&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;O:/01_git&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.29481733&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="K2MoveDeclarationsDialog.RECENT_PACKAGE_KEY">
       <recent name="io.github.mpichler94.browser" />
