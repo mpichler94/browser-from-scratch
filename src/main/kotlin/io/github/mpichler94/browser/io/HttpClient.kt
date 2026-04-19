@@ -30,19 +30,21 @@ class HttpClient private constructor() {
             return cache[request.url]!!.response
         }
 
-        val response = try {
-            doHttpRequest(request)
-        } catch (e: SocketException) {
-            socketHandler.closeSocket()
-            doHttpRequest(request)
-        }
+        val response =
+            try {
+                doHttpRequest(request)
+            } catch (e: SocketException) {
+                socketHandler.closeSocket()
+                doHttpRequest(request)
+            }
 
         if (response.headers["cache-control"]?.contains("max-age") == true) {
             val maxAge = maxAgePattern.find(response.headers["cache-control"]!!)?.groupValues[1]?.toInt() ?: 0
-            cache[request.url] = CachedResponse(
-                Instant.now().plusSeconds(maxAge.toLong()),
-                response,
-            )
+            cache[request.url] =
+                CachedResponse(
+                    Instant.now().plusSeconds(maxAge.toLong()),
+                    response,
+                )
 
             // TODO: more sophisticated cache eviction
             if (cache.size > 740) {
@@ -58,7 +60,10 @@ class HttpClient private constructor() {
         return response
     }
 
-    private fun doHttpRequest(request: Request, depth: Int = 0): Response {
+    private fun doHttpRequest(
+        request: Request,
+        depth: Int = 0,
+    ): Response {
         val socket = socketHandler.getSocket(request)
 
         logger.debug { "Sending request to '${request.url.host}': \n$request" }
@@ -71,23 +76,25 @@ class HttpClient private constructor() {
         }
         val statusLine = lines.first()
         val (version, status, explanation) = statusLine.split(" ", limit = 3)
-        val headers = lines.drop(1).takeWhile { it.isNotBlank() }.associate {
-            val (key, value) = it.split(": ")
-            key.lowercase() to value.trim()
-        }
+        val headers =
+            lines.drop(1).takeWhile { it.isNotBlank() }.associate {
+                val (key, value) = it.split(": ")
+                key.lowercase() to value.trim()
+            }
 
         val useGZip = headers["content-encoding"] == "gzip"
-        val body = if (headers["transfer-encoding"] == "chunked") {
-            socket.readChunks(useGZip)
-        } else {
-            val length = headers["content-length"]?.toInt() ?: 0
-
-            if (useGZip) {
-                GZIPInputStream(socket.getInputStream()).readNBytes(length)
+        val body =
+            if (headers["transfer-encoding"] == "chunked") {
+                socket.readChunks(useGZip)
             } else {
-                socket.getInputStream().readNBytes(length)
+                val length = headers["content-length"]?.toInt() ?: 0
+
+                if (useGZip) {
+                    GZIPInputStream(socket.getInputStream()).readNBytes(length)
+                } else {
+                    socket.getInputStream().readNBytes(length)
+                }
             }
-        }
 
         logger.debug {
             "Reading response from '${request.url.host}': $statusLine\n${
@@ -97,11 +104,12 @@ class HttpClient private constructor() {
 
         if (status.startsWith("3") && "location" in headers) {
             val location = headers["location"]!!
-            val newUrl = if (location.startsWith("/")) {
-                request.url.withPath(location)
-            } else {
-                URL(location)
-            }
+            val newUrl =
+                if (location.startsWith("/")) {
+                    request.url.withPath(location)
+                } else {
+                    URL(location)
+                }
             if (depth < 15) {
                 return doHttpRequest(Request(newUrl, request.method, request.headers), depth + 1)
             }
@@ -121,11 +129,12 @@ class HttpClient private constructor() {
                 return bytes
             }
 
-            bytes += if (useGZip) {
-                GZIPInputStream(getInputStream()).readNBytes(size)
-            } else {
-                getInputStream().readNBytes(size)
-            }
+            bytes +=
+                if (useGZip) {
+                    GZIPInputStream(getInputStream()).readNBytes(size)
+                } else {
+                    getInputStream().readNBytes(size)
+                }
             // read \r\n
             getInputStream().readNBytes(2)
         }
@@ -143,7 +152,10 @@ class HttpClient private constructor() {
         return null
     }
 
-    internal fun setCookie(url: URL, cookie: Cookie) {
+    internal fun setCookie(
+        url: URL,
+        cookie: Cookie,
+    ) {
         COOKIE_JAR[url.host] = cookie
     }
 }

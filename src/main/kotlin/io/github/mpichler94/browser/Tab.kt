@@ -64,13 +64,14 @@ class Tab(
     private val client = HttpClient.instance
     private val defaultStyleSheet: Map<Selector, Map<String, String>> =
         CssParser(Tab::class.java.getResource("/browser.css")!!.readText()).parse()
-    private val inheritedProperties = mapOf(
-        "color" to "black",
-        "font-size" to "16px",
-        "font-style" to "normal",
-        "font-weight" to "normal",
-        "font-family" to "sans-serif",
-    )
+    private val inheritedProperties =
+        mapOf(
+            "color" to "black",
+            "font-size" to "16px",
+            "font-style" to "normal",
+            "font-weight" to "normal",
+            "font-family" to "sans-serif",
+        )
     private val vStep = 50
     private val allowedOrigins: MutableSet<String> = mutableSetOf()
     private var width: Float = 0f
@@ -85,15 +86,19 @@ class Tab(
     private var needsRender = false
     private var scrollChangedInTab = false
 
-    fun resize(width: Float, height: Float) {
+    fun resize(
+        width: Float,
+        height: Float,
+    ) {
         this.width = width
         this.height = height
         val documentHeight = document?.height ?: 0f
-        val newScroll = if (documentHeight > height) {
-            scroll.coerceIn(0f, (document?.height ?: 0f) - height)
-        } else {
-            0f
-        }
+        val newScroll =
+            if (documentHeight > height) {
+                scroll.coerceIn(0f, (document?.height ?: 0f) - height)
+            } else {
+                0f
+            }
         if (newScroll != scroll) {
             scrollChangedInTab = true
             scroll = newScroll
@@ -102,18 +107,24 @@ class Tab(
         needsRender()
     }
 
-    fun mouseClicked(button: MouseButton, x: Float, y: Float) {
+    fun mouseClicked(
+        button: MouseButton,
+        x: Float,
+        y: Float,
+    ) {
         render()
         focus?.let { it.isFocused = false }
 
         val y = y + scroll
 
-        val objects = document?.toList()?.filter {
-            val radius = it.node.style["border-radius"]
-                ?.dropLast(2)
-                ?.toIntOrNull() ?: 0
-            isPointInRoundedRect(Point(x, y), it.rect, radius.toFloat())
-        }
+        val objects =
+            document?.toList()?.filter {
+                val radius =
+                    it.node.style["border-radius"]
+                        ?.dropLast(2)
+                        ?.toIntOrNull() ?: 0
+                isPointInRoundedRect(Point(x, y), it.rect, radius.toFloat())
+            }
 
         var element = objects?.lastOrNull()?.node
         while (element != null) {
@@ -124,11 +135,12 @@ class Tab(
                 val href = element.attributes["href"]!!
                 val url = url?.resolve(href.substringBefore("#"))
                 val fragment = href.substringAfter("#", "")
-                val targetUrl = if (fragment.isNotBlank()) {
-                    "${(url?.toString() ?: "")}#$fragment"
-                } else {
-                    (url?.toString() ?: "")
-                }
+                val targetUrl =
+                    if (fragment.isNotBlank()) {
+                        "${(url?.toString() ?: "")}#$fragment"
+                    } else {
+                        (url?.toString() ?: "")
+                    }
 
                 if (button == MouseButton.MIDDLE) {
                     return browser.newTab(targetUrl)
@@ -153,7 +165,11 @@ class Tab(
         needsRender()
     }
 
-    private fun isPointInRoundedRect(point: Point, rect: Rect, radius: Float): Boolean {
+    private fun isPointInRoundedRect(
+        point: Point,
+        rect: Rect,
+        radius: Float,
+    ): Boolean {
         if (!rect.contains(point)) {
             return false
         }
@@ -221,7 +237,10 @@ class Tab(
         doLoad()
     }
 
-    fun load(url: String, body: String? = null) {
+    fun load(
+        url: String,
+        body: String? = null,
+    ) {
         if (url != rawUrl) {
             history.add(url)
             historyIndex++
@@ -271,12 +290,13 @@ class Tab(
             }
             rules = defaultStyleSheet.toList()
 
-            val links = nodes!!
-                .treeToList()
-                .filterIsInstance<Element>()
-                .filter { it.tag == "link" && it.attributes["rel"] == "stylesheet" }
-                .filter { "href" in it.attributes }
-                .map { it.attributes["href"]!! }
+            val links =
+                nodes!!
+                    .treeToList()
+                    .filterIsInstance<Element>()
+                    .filter { it.tag == "link" && it.attributes["rel"] == "stylesheet" }
+                    .filter { "href" in it.attributes }
+                    .map { it.attributes["href"]!! }
 
             for (link in links) {
                 val styleUrl = URL(parsedUrl).resolve(link)
@@ -284,11 +304,12 @@ class Tab(
                 rules += CssParser(body).parse().toList()
             }
 
-            val scripts = nodes!!
-                .treeToList()
-                .filterIsInstance<Element>()
-                .filter { it.tag == "script" && "src" in it.attributes }
-                .map { it.attributes["src"]!! }
+            val scripts =
+                nodes!!
+                    .treeToList()
+                    .filterIsInstance<Element>()
+                    .filter { it.tag == "script" && "src" in it.attributes }
+                    .map { it.attributes["src"]!! }
 
             js?.discarded = true
             js = JsContext(this)
@@ -316,7 +337,10 @@ class Tab(
         }
     }
 
-    private fun getResponse(url: String, body: String? = null): Response {
+    private fun getResponse(
+        url: String,
+        body: String? = null,
+    ): Response {
         val parsedUrl = URL(url)
 
         if (!allowedRequest(parsedUrl)) {
@@ -330,11 +354,12 @@ class Tab(
             Response(body = File(parsedUrl.path).readText())
         } else {
             try {
-                val response = if (body != null) {
-                    client.request(parsedUrl.createRequest("POST", this.url, body))
-                } else {
-                    client.request(parsedUrl.createRequest(referrer = this.url))
-                }
+                val response =
+                    if (body != null) {
+                        client.request(parsedUrl.createRequest("POST", this.url, body))
+                    } else {
+                        client.request(parsedUrl.createRequest(referrer = this.url))
+                    }
                 response
             } catch (e: SSLException) {
                 this.url = null
@@ -424,16 +449,18 @@ class Tab(
     private fun submitForm(form: Element) {
         if (js?.dispatchEvent("submit", form) == true) return
 
-        val inputs = form
-            .treeToList()
-            .filterIsInstance<Element>()
-            .filter { it.tag == "input" && "name" in it.attributes }
+        val inputs =
+            form
+                .treeToList()
+                .filterIsInstance<Element>()
+                .filter { it.tag == "input" && "name" in it.attributes }
 
-        val body = inputs.joinToString("&") {
-            val name = URLEncoder.encode(it.attributes["name"]!!, Charsets.UTF_8).replace("+", "%20")
-            val value = URLEncoder.encode(it.attributes["value"] ?: "", Charsets.UTF_8).replace("+", "%20")
-            "$name=$value"
-        }
+        val body =
+            inputs.joinToString("&") {
+                val name = URLEncoder.encode(it.attributes["name"]!!, Charsets.UTF_8).replace("+", "%20")
+                val value = URLEncoder.encode(it.attributes["value"] ?: "", Charsets.UTF_8).replace("+", "%20")
+                "$name=$value"
+            }
         val url = url!!.resolve(form.attributes["action"]!!)
         load(url.toString(), body)
     }
@@ -476,11 +503,12 @@ class Tab(
         }
 
         if (style["font-size"]?.endsWith("%") == true) {
-            val parentFontSize = if (parent != null) {
-                parent!!.style["font-size"]
-            } else {
-                inheritedProperties["font-size"]
-            }
+            val parentFontSize =
+                if (parent != null) {
+                    parent!!.style["font-size"]
+                } else {
+                    inheritedProperties["font-size"]
+                }
             val nodePct = style["font-size"]?.dropLast(1)?.toFloatOrNull()?.div(100) ?: 1.0f
             val parentPx = parentFontSize?.dropLast(2)?.toFloatOrNull() ?: 16.0f
             style["font-size"] = "${(parentPx * nodePct).toInt()}px"

@@ -4,22 +4,23 @@ class HtmlParser(
     private val body: String,
 ) {
     companion object {
-        internal val selfClosingTags = setOf(
-            "area",
-            "base",
-            "br",
-            "col",
-            "embed",
-            "hr",
-            "img",
-            "input",
-            "link",
-            "meta",
-            "param",
-            "source",
-            "track",
-            "wbr",
-        )
+        internal val selfClosingTags =
+            setOf(
+                "area",
+                "base",
+                "br",
+                "col",
+                "embed",
+                "hr",
+                "img",
+                "input",
+                "link",
+                "meta",
+                "param",
+                "source",
+                "track",
+                "wbr",
+            )
     }
 
     private val entities = mapOf("lt" to "<", "gt" to ">")
@@ -71,15 +72,23 @@ class HtmlParser(
                     buffer = ""
                 }
 
-                '&' if (!inTag && !inAttribute && !inScript) -> inEntity = true
+                '&' if (!inTag && !inAttribute && !inScript) -> {
+                    inEntity = true
+                }
+
                 ';' if (inEntity) -> {
                     inEntity = false
                     buffer += entities[entity] ?: entity
                     entity = ""
                 }
 
-                else if (inEntity) -> entity += c
-                else -> buffer += c
+                else if (inEntity) -> {
+                    entity += c
+                }
+
+                else -> {
+                    buffer += c
+                }
             }
         }
         if (!inTag && buffer.isNotEmpty()) {
@@ -142,16 +151,17 @@ class HtmlParser(
     private fun getAttributes(text: String): Tag {
         val parts = text.split(' ', '\n', '\t', '\r')
         val tag = parts[0].lowercase().trim()
-        val attributes = buildMap {
-            for (pair in parts.subList(1, parts.size)) {
-                if (pair.contains('=')) {
-                    val (key, value) = pair.split('=', limit = 2)
-                    put(key.lowercase().trim(), value.trim().trim('"', '\''))
-                } else {
-                    put(pair.lowercase().trim(), "")
+        val attributes =
+            buildMap {
+                for (pair in parts.subList(1, parts.size)) {
+                    if (pair.contains('=')) {
+                        val (key, value) = pair.split('=', limit = 2)
+                        put(key.lowercase().trim(), value.trim().trim('"', '\''))
+                    } else if (pair.isNotBlank()) {
+                        put(pair.lowercase().trim(), "")
+                    }
                 }
             }
-        }
         return Tag(tag, attributes.toMutableMap())
     }
 
@@ -240,14 +250,15 @@ class Element(
     override var isFocused = false
 
     override fun toString(): String {
-        val attrString = attributes
-            .map {
-                if (it.value.isBlank()) {
-                    it.key
-                } else {
-                    "${it.key}=\"${it.value}\""
-                }
-            }.joinToString(" ")
+        val attrString =
+            attributes
+                .map {
+                    if (it.value.isBlank()) {
+                        it.key
+                    } else {
+                        "${it.key}=\"${it.value}\""
+                    }
+                }.joinToString(" ")
         return "<$tag${if (attrString.isBlank()) "" else " "}$attrString>"
     }
 }

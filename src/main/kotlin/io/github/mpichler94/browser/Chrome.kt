@@ -41,25 +41,33 @@ class Chrome(
 
     val bottom = urlbarBottom
 
-    fun resize(width: Float, height: Float) {
+    fun resize(
+        width: Float,
+        height: Float,
+    ) {
         val plusWidth = font.measureTextWidth("+") + 2 * padding
         newTabRect = Rect.makeXYWH(padding, padding, plusWidth, fontHeight)
 
         val backWidth = font.measureTextWidth("<") + 2 * padding
         backRect = Rect.makeLTRB(padding, urlbarTop + padding, padding + backWidth, urlbarBottom - padding)
         val forwardWidth = font.measureTextWidth(">") + 2 * padding
-        forwardRect = Rect.makeLTRB(
-            backRect.right + 2 * padding,
-            urlbarTop + padding,
-            backRect.right + 2 * padding + forwardWidth,
-            urlbarBottom - padding,
-        )
+        forwardRect =
+            Rect.makeLTRB(
+                backRect.right + 2 * padding,
+                urlbarTop + padding,
+                backRect.right + 2 * padding + forwardWidth,
+                urlbarBottom - padding,
+            )
 
         addressRect =
             Rect.makeLTRB(forwardRect.right + padding, urlbarTop + padding, width - padding, urlbarBottom - padding)
     }
 
-    fun mouseClicked(button: MouseButton, x: Float, y: Float) {
+    fun mouseClicked(
+        button: MouseButton,
+        x: Float,
+        y: Float,
+    ) {
         focus = null
         if (newTabRect.contains(x, y)) {
             browser.newTab("https://browser.engineering/")
@@ -144,7 +152,10 @@ class Chrome(
         return Rect.makeLTRB(tabsStart + index * tabWidth, tabbarTop, tabsStart + (index + 1) * tabWidth, tabbarBottom)
     }
 
-    fun paint(width: Float, height: Float): List<Drawable> {
+    fun paint(
+        width: Float,
+        height: Float,
+    ): List<Drawable> {
         val cmds = mutableListOf<Drawable>()
 
         // Top bar
@@ -199,12 +210,13 @@ class Chrome(
                 x += boldFont.measureTextWidth("Unsafe ")
                 url = url.replaceFirst("Unsafe", "").trim()
                 if ("https://" in url) {
-                    val ts = TextStyle()
-                        .setDecorationStyle(DecorationStyle.NONE.withLineThrough(true).withColor(Color.RED.value))
-                        .setFontFamily(font.typeface!!.familyName)
-                        .setFontStyle(FontStyle.BOLD)
-                        .setFontSize(font.size)
-                        .setColor(Color.RED.value)
+                    val ts =
+                        TextStyle()
+                            .setDecorationStyle(DecorationStyle.NONE.withLineThrough(true).withColor(Color.RED.value))
+                            .setFontFamily(font.typeface!!.familyName)
+                            .setFontStyle(FontStyle.BOLD)
+                            .setFontSize(font.size)
+                            .setColor(Color.RED.value)
 
                     val paragraph = DrawParagraph(x, addressRect.top, "https", ts)
                     cmds.add(paragraph)

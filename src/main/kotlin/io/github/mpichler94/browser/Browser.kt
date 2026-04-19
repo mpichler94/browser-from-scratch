@@ -60,9 +60,10 @@ class Browser(
     private val chrome = Chrome(this)
     private val layer: LayerGLSkija = LayerGLSkija()
 
-    private var chromeSurface: Surface = Surface.makeRaster(
-        ImageInfo.makeN32Premul(window.contentRect.width, ceil(chrome.bottom / window.screen.scale).toInt()),
-    )
+    private var chromeSurface: Surface =
+        Surface.makeRaster(
+            ImageInfo.makeN32Premul(window.contentRect.width, ceil(chrome.bottom / window.screen.scale).toInt()),
+        )
     private var tabSurface: Surface? = null
     private var tabSurfaceY: Int = 0
     private var focus: String? = null
@@ -89,10 +90,11 @@ class Browser(
     override fun accept(e: Event) {
         when (e) {
             is EventWindowResize, is EventWindowScreenChange -> {
-                chromeSurface = chromeSurface.makeSurface(
-                    window.contentRect.width,
-                    ceil(chrome.bottom * window.screen.scale).toInt(),
-                )!!
+                chromeSurface =
+                    chromeSurface.makeSurface(
+                        window.contentRect.width,
+                        ceil(chrome.bottom * window.screen.scale).toInt(),
+                    )!!
 
                 val width = window.contentRect.width / window.screen.scale
                 val height = window.contentRect.height / window.screen.scale
@@ -224,7 +226,10 @@ class Browser(
         activeTab = tabs[newIndex]
     }
 
-    fun scheduleLoad(url: String, body: String? = null) {
+    fun scheduleLoad(
+        url: String,
+        body: String? = null,
+    ) {
         activeTab?.taskRunner?.clearPendingTasks()
         activeTab?.schedule { load(url, body) }
     }
@@ -243,13 +248,14 @@ class Browser(
         if (needsAnimationFrame && animationTimer == null) {
             val activeTab = this.activeTab
             val scroll = activeTabScroll
-            animationTimer = executor.schedule({
-                activeTab?.schedule {
-                    needsAnimationFrame = false
-                    runAnimationFrame(scroll)
-                }
-                animationTimer = null
-            }, 33, TimeUnit.MILLISECONDS)
+            animationTimer =
+                executor.schedule({
+                    activeTab?.schedule {
+                        needsAnimationFrame = false
+                        runAnimationFrame(scroll)
+                    }
+                    animationTimer = null
+                }, 33, TimeUnit.MILLISECONDS)
         }
     }
 
@@ -264,7 +270,10 @@ class Browser(
     }
 
     @Synchronized
-    fun commit(tab: Tab, data: CommitData) {
+    fun commit(
+        tab: Tab,
+        data: CommitData,
+    ) {
         if (tab == activeTab) {
             activeTabUrl = data.url
             if (data.scroll != null) {
@@ -347,7 +356,11 @@ class Browser(
         canvas.restore()
     }
 
-    private fun drawScrollBar(canvas: Canvas, width: Float, height: Float) {
+    private fun drawScrollBar(
+        canvas: Canvas,
+        width: Float,
+        height: Float,
+    ) {
         val documentHeight = activeTab?.document?.height?.coerceAtLeast(1f) ?: 1f
         if (height == 0f || documentHeight < height) {
             return
@@ -369,12 +382,17 @@ class Browser(
     }
 }
 
-internal fun URL.createRequest(method: String = "GET", referrer: URL? = null, body: String? = null): Request {
-    val additionalHeaders = mutableMapOf(
-        "Host" to host,
-        "Connection" to "keep-alive",
-        "User-Agent" to "Browser from Scratch",
-    )
+internal fun URL.createRequest(
+    method: String = "GET",
+    referrer: URL? = null,
+    body: String? = null,
+): Request {
+    val additionalHeaders =
+        mutableMapOf(
+            "Host" to host,
+            "Connection" to "keep-alive",
+            "User-Agent" to "Browser from Scratch",
+        )
     val cookie = HttpClient.instance.getCookie(this)
     if (cookie != null) {
         var allowCookie = true

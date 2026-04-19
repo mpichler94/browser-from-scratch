@@ -13,11 +13,12 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>17</maven.compiler.release>
         <java.version>25</java.version>
-        <kotlin.version>2.2.21</kotlin.version>
+        <kotlin.version>2.3.20</kotlin.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
         <graaljs.version>25.0.1</graaljs.version>
         <lwjgl.version>3.3.6</lwjgl.version>
         <kotlin.compiler.jvmTarget>24</kotlin.compiler.jvmTarget>
+        <kotest.version>6.1.11</kotest.version>
     </properties>
 
     <dependencyManagement>
@@ -25,7 +26,7 @@
             <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
-                <version>5.13.4</version>
+                <version>6.0.1</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -87,27 +88,28 @@
 
 
         <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-test-junit5</artifactId>
-            <version>${kotlin.version}</version>
-        </dependency>
-        <!-- Optionally: parameterized tests support -->
-        <dependency>
             <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-params</artifactId>
+            <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <version>3.27.3</version>
+            <groupId>io.kotest</groupId>
+            <artifactId>kotest-assertions-core</artifactId>
+            <version>${kotest.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.mock-server</groupId>
-            <artifactId>mockserver-junit-jupiter-no-dependencies</artifactId>
-            <version>5.15.0</version>
+            <groupId>io.kotest</groupId>
+            <artifactId>kotest-runner-junit5-jvm</artifactId>
+            <version>${kotest.version}</version>
+            <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>io.kotest</groupId>
+            <artifactId>kotest-extensions-mockserver</artifactId>
+            <version>${kotest.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -125,7 +127,7 @@
                         <configuration>
                             <rules>
                                 <requireMavenVersion>
-                                    <version>3.9.0</version>
+                                    <version>4.0.0-rc-4</version>
                                 </requireMavenVersion>
                             </rules>
                         </configuration>
